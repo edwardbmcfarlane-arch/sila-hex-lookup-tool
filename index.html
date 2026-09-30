@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HEX Field Lookup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #04314f;
+    --navy-2: #0a4468;
+    --panel: #0e3a56;
+    --panel-2: #123f5c;
+    --ink: #eef3f6;
+    --ink-dim: #9fb6c6;
+    --orange: #f15f23;
+    --orange-2: #ff7a42;
+    --line: #1c5578;
+    --amber: #e8a13a;
+    --green: #4caf7d;
+    --radius: 10px;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  * { box-sizing: inherit; }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); height: 100%; }
+  body {
+    margin: 0;
+    min-height: 100%;
+    background: var(--navy);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 20px 18px 64px; }
+
+  header.top {
+    position: sticky; top: env(safe-area-inset-top, 0px);
+    z-index: 5;
+    background: var(--navy);
+    padding: 18px 18px 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  header.top .inner { max-width: 720px; margin: 0 auto; }
+  .eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--orange-2);
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 6px;
+  }
+  .eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--orange); flex: none; }
+  h1 {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: clamp(26px, 6vw, 34px);
+    letter-spacing: 0.01em;
+    margin: 0 0 4px;
+    text-transform: uppercase;
+  }
+  .sub { color: var(--ink-dim); font-size: 14px; margin: 0 0 16px; max-width: 46ch; line-height: 1.4; }
+
+  .searchbar {
+    display: flex; gap: 8px; align-items: stretch;
+  }
+  .searchbar input {
+    flex: 1;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    color: var(--ink);
+    font-size: 16px;
+    padding: 14px 14px;
+    font-family: inherit;
+  }
+  .searchbar input::placeholder { color: var(--ink-dim); }
+  .searchbar input:focus { outline: 2px solid var(--orange); outline-offset: 1px; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .chip {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--ink-dim);
+    padding: 6px 10px;
+    border-radius: 999px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .chip:active, .chip.active {
+    border-color: var(--orange);
+    color: var(--orange-2);
+  }
+
+  .status-line {
+    font-size: 13px; color: var(--ink-dim);
+    margin: 16px 0 10px;
+    display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
+  }
+  .status-line strong { color: var(--ink); font-weight: 600; }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .card-top { display: flex; gap: 12px; align-items: flex-start; }
+  .icon-box {
+    flex: none;
+    width: 46px; height: 46px;
+    border-radius: 8px;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .icon-box svg { width: 26px; height: 26px; stroke: var(--orange-2); }
+  .card-head { flex: 1; min-width: 0; }
+  .card-title {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 18px;
+    letter-spacing: 0.01em;
+    margin: 0 0 2px;
+  }
+  .card-meta {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    color: var(--ink-dim);
+    display: flex; flex-wrap: wrap; gap: 6px 10px;
+  }
+  .card-meta span { white-space: nowrap; }
+
+  .pointer {
+    margin: 12px 0 10px;
+    font-size: 14.5px;
+    line-height: 1.5;
+    color: var(--ink);
+  }
+
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .tag {
+    font-size: 12px;
+    background: var(--navy-2);
+    border: 1px solid var(--line);
+    color: var(--ink-dim);
+    padding: 3px 9px;
+    border-radius: 999px;
+  }
+
+  .card-foot {
+    display: flex; justify-content: space-between; align-items: center;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+    font-size: 12px;
+  }
+  .source-badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .source-badge.cleared { background: rgba(76,175,125,0.14); color: var(--green); }
+  .source-badge.pending { background: rgba(232,161,58,0.14); color: var(--amber); }
+  .page-ref { color: var(--ink-dim); }
+
+  .empty {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--ink-dim);
+  }
+  .empty svg { width: 40px; height: 40px; stroke: var(--line); margin-bottom: 12px; }
+  .empty strong { display: block; color: var(--ink); margin-bottom: 6px; font-size: 15px; }
+
+  footer.notice {
+    margin-top: 28px;
+    padding: 14px 16px;
+    border: 1px dashed var(--line);
+    border-radius: var(--radius);
+    font-size: 12.5px;
+    color: var(--ink-dim);
+    line-height: 1.5;
+  }
+  footer.notice strong { color: var(--ink); }
+
+  @media (min-width: 560px) {
+    .searchbar { gap: 10px; }
+  }
+
+  /* --- Plate reader panel --- */
+  .plate-panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 18px;
+  }
+  .plate-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    cursor: pointer;
+  }
+  .plate-head h2 {
+    font-family: 'Oswald', sans-serif;
+    font-size: 16px; font-weight: 600; letter-spacing: 0.01em;
+    margin: 0; text-transform: uppercase; color: var(--ink);
+  }
+  .plate-head .caret {
+    font-family: 'IBM Plex Mono', monospace; color: var(--ink-dim); font-size: 13px;
+    transition: transform 0.15s ease;
+  }
+  .plate-panel.open .plate-head .caret { transform: rotate(90deg); }
+  .plate-sub { font-size: 13px; color: var(--ink-dim); margin: 4px 0 0; }
+
+  .plate-body { display: none; margin-top: 14px; }
+  .plate-panel.open .plate-body { display: block; }
+
+  .plate-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+  .btn {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    border-radius: 8px;
+    padding: 12px 16px;
+    border: 1px solid var(--line);
+    background: var(--navy-2);
+    color: var(--ink);
+    cursor: pointer;
+    flex: 1;
+    min-width: 140px;
+    text-align: center;
+  }
+  .btn.primary { background: var(--orange); border-color: var(--orange); color: #1a0d05; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-note { font-size: 11.5px; color: var(--ink-dim); margin: -4px 0 12px; }
+
+  .manual-fields { display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom: 12px; }
+  .manual-fields select, .manual-fields input {
+    background: var(--navy-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--ink);
+    font-size: 15px;
+    padding: 10px 12px;
+    font-family: inherit;
+  }
+
+  .plate-result {
+    border-top: 1px solid var(--line);
+    padding-top: 12px;
+    margin-top: 4px;
+  }
+  .result-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+  .conf-badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10.5px;
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
+  .conf-badge.high { background: rgba(76,175,125,0.16); color: var(--green); }
+  .conf-badge.medium { background: rgba(232,161,58,0.16); color: var(--amber); }
+  .conf-badge.low { background: rgba(255,255,255,0.06); color: var(--ink-dim); }
+  .result-note { font-size: 13px; color: var(--ink-dim); line-height: 1.5; margin: 0 0 10px; }
+  .result-note a { color: var(--orange-2); }
+
+  .legend-table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 6px; }
+  .legend-table th, .legend-table td {
+    text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+  .legend-table th { color: var(--ink-dim); font-weight: 500; font-family: 'IBM Plex Mono', monospace; font-size: 11px; }
+  .legend-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  .status-msg { font-size: 13.5px; padding: 10px 0; color: var(--ink-dim); }
+  .status-msg.err { color: #e07a6a; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="inner">
+    <div class="eyebrow"><span class="dot"></span>SILA SERVICES &middot; L&amp;D FIELD TOOL &middot; PROTOTYPE</div>
+    <h1>HEX Field Lookup</h1>
+    <p class="sub">Type a brand, a model, or what you're actually seeing on the unit — a lookup built for the truck, not for studying.</p>
+    <div class="searchbar">
+      <input id="searchInput" type="text" inputmode="search" autocomplete="off"
+             placeholder="Try &ldquo;popped eyelet&rdquo;, &ldquo;Trane&rdquo;, or &ldquo;milky flue pipe&rdquo;&hellip;" />
+    </div>
+    <div class="chips" id="chipRow"></div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="plate-panel" id="platePanel">
+    <div class="plate-head" id="plateToggle">
+      <div>
+        <h2>Read a Data Plate</h2>
+        <p class="plate-sub">Photo the tag, or type in the brand/model/serial — either way, this estimates age and pulls up what we know about that unit.</p>
+      </div>
+      <span class="caret">&#9656;</span>
+    </div>
+    <div class="plate-body" id="plateBody">
+
+      <div class="plate-row">
+        <button class="btn primary" id="photoBtn" type="button" style="display:none;">&#128247; Photo the plate</button>
+        <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none;">
+        <button class="btn" id="manualBtn" type="button">&#9000; Type it in instead</button>
+      </div>
+      <p class="btn-note" id="photoNote" style="display:none;">Reading a photo calls Claude via this site's own server — it'll ask for the tool passcode the first time on this device.</p>
+
+      <div class="manual-fields" id="manualFields" style="display:none;">
+        <select id="brandSelect">
+          <option value="">Select brand&hellip;</option>
+        </select>
+        <input type="text" id="modelField" placeholder="Model number (as printed on the plate)">
+        <input type="text" id="serialField" placeholder="Serial number (as printed on the plate)">
+        <button class="btn primary" id="lookupBtn" type="button">Look it up</button>
+      </div>
+
+      <div id="plateStatus"></div>
+      <div id="plateResult" class="plate-result" style="display:none;"></div>
+    </div>
+  </div>
+
+  <div class="plate-panel" id="regsPanel">
+    <div class="plate-head" id="regsToggle">
+      <div>
+        <h2>Codes &amp; Regs for Your Location</h2>
+        <p class="plate-sub">Tell it a town or address — it'll surface the adopted fuel gas code and the state's carbon monoxide alarm law for that state, so you know the scope of what's actually on the books, not just the furnace in front of you.</p>
+      </div>
+      <span class="caret">&#9656;</span>
+    </div>
+    <div class="plate-body" id="regsBody">
+      <div class="plate-row">
+        <input type="text" id="locationField" placeholder="Town, State or full address" style="flex:1 1 auto; background:var(--navy-2); border:1px solid var(--line); border-radius:8px; color:var(--ink); font-size:15px; padding:10px 12px;">
+        <button class="btn primary" id="regsLookupBtn" type="button" style="flex:0 0 auto;">Look up</button>
+      </div>
+      <p class="btn-note">Resolving a location calls Claude via this site's own server — it'll ask for the tool passcode the first time on this device.</p>
+
+      <div class="plate-result" style="display:block; border-top:none; padding-top:0; margin-bottom:14px;">
+        <div class="result-row"><strong>The safety-inspection procedure (applies everywhere)</strong> <span class="conf-badge medium">SAME ACROSS STATES</span></div>
+        <p class="result-note">IFGC/IFGS Appendix C (or NFPA 54 Annex G in the four NFPA-54 states) &mdash; before touching the equipment, take an ambient reading: <a href="https://codes.iccsafe.org/content/VAFGC2021P1/appendix-c-ifgs-recommended-procedure-for-safety-inspection-of-an-existing-appliance-installation" target="_blank" rel="noopener" style="font-family:'IBM Plex Mono',monospace;">read the official text &rarr;</a></p>
+        <div class="legend-wrap"><table class="legend-table">
+          <thead><tr><th>Ambient reading</th><th>Required action</th></tr></thead>
+          <tbody>
+            <tr><td>CO &ge; 70 ppm</td><td>Evacuate occupants, evacuate yourself, call 911</td></tr>
+            <tr><td>CO 30&ndash;70 ppm (traced to a fixed appliance)</td><td>Shut the appliance off, tell the occupant it needs service before reuse</td></tr>
+            <tr><td>Combustible gas &ge; 20% LEL</td><td>Evacuate, call 911</td></tr>
+          </tbody>
+        </table></div>
+        <p class="result-note">Standing duty underneath all of it: find a condition that could make the appliance operate unsafely at any point &rarr; shut it off, tell the owner. Find a gas leak that could be unsafe &rarr; tell the owner, call the gas utility to shut off supply.</p>
+        <p class="result-note">The classification itself &mdash; why this is "unsafe equipment," not a personal opinion &mdash; comes from two places worth showing a homeowner directly: <a href="https://up.codes/s/unsafe-building-service-equipment" target="_blank" rel="noopener" style="font-family:'IBM Plex Mono',monospace;">IPMC \u00a7108.1.2, Unsafe Equipment &rarr;</a> and <a href="https://up.codes/s/unsafe-mechanical-systems" target="_blank" rel="noopener" style="font-family:'IBM Plex Mono',monospace;">IMC \u00a7108, Unsafe Mechanical Systems &rarr;</a> (this one calls it a "public nuisance" outright, and Wisconsin\u2019s own code uses this exact language).</p>
+        <p class="result-note" style="color:var(--amber);">Who\u2019s actually authorized to physically shut off gas/electrical service varies by jurisdiction &mdash; some codes route that authority through a code official or the utility rather than the private technician. Worth confirming state by state with Sila legal/compliance before treating "I\u2019ve already shut off the gas and electrical" as accurate everywhere. (Narrower than it sounds: isolating the unit you're servicing at its own valve/breaker is standard technician scope everywhere \u2014 it's the formal condemnation/placarding act and utility-level disconnection that the code routes through an official.)</p>
+        <p class="result-note" style="opacity:0.8;">None of the text above is reproduced from the codes themselves &mdash; these are paraphrases with links to the real, current, official source. Use the links, not this summary, when showing a homeowner.</p>
+      </div>
+
+      <div id="regsStatus"></div>
+      <div id="regsResult" class="plate-result" style="display:none;"></div>
+    </div>
+  </div>
+
+  <div class="status-line">
+    <span><strong id="resultCount">0</strong> results</span>
+    <span id="filterLabel">All entries</span>
+  </div>
+
+  <div id="results"></div>
+
+  <div id="emptyState" class="empty" style="display:none;">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+    <strong>No matches yet</strong>
+    Try a symptom like &ldquo;discolored flue&rdquo; or a brand like &ldquo;Carrier&rdquo;.
+  </div>
+
+  <div class="plate-panel" id="askPanel">
+    <div class="plate-head" id="askToggle">
+      <div>
+        <h2>Ask HEX</h2>
+        <p class="plate-sub">Type a question in plain language. Answers only use the reference data already in this tool and the manual index below &mdash; not the manual's own text.</p>
+      </div>
+      <span class="caret">&#9656;</span>
+    </div>
+    <div class="plate-body" id="askBody">
+      <div class="plate-row">
+        <input type="text" id="askInput" placeholder="e.g. Why does a Trane 90% crack differently than other 90% units?" style="flex:1 1 auto; background:var(--navy-2); border:1px solid var(--line); border-radius:8px; color:var(--ink); font-size:15px; padding:10px 12px;">
+        <button class="btn primary" id="askBtn" type="button" style="flex:0 0 auto;">Ask</button>
+      </div>
+      <p class="btn-note">Calls Claude via this site's own server, same as the plate reader and codes lookup above.</p>
+      <div id="askStatus"></div>
+      <div id="askResult" class="plate-result" style="display:none;"></div>
+    </div>
+  </div>
+
+  <div class="status-line" style="margin-top:0;"><span><strong id="manualResultCount">0</strong> manual index entries</span><span>HEX 2026 Manual &mdash; photo index</span></div>
+  <div id="manualResults"></div>
+  <div id="manualEmptyState" class="empty" style="display:none;">No matches &mdash; try a brand name or a word like &ldquo;recall&rdquo; or &ldquo;drum.&rdquo;</div>
+
+  <footer class="notice">
+    <strong>What this is:</strong> a working prototype seeded with entries already cleared for Sila use &mdash; the manufacturer notes already licensed into the HEX trainer deck, plus the venting/draft and efficiency-generation content from the live class that isn't written down anywhere else yet. Entries marked <span style="color:var(--amber)">PENDING</span> are placeholders waiting on the 2026 manual's page images and Heat Exchanger Experts' sign-off before the real page content goes in. Nothing here reproduces the manual's text.
+  </footer>
+</div>
+
+<script>
+/* =========================================================================
+   NETLIFY-HOSTED AI ACCESS
+   This page never talks to Anthropic directly — it calls this site's own
+   serverless function (/.netlify/functions/claude), which holds the real
+   API key server-side. See README.md for setup (ANTHROPIC_API_KEY,
+   SITE_PASSCODE env vars in the Netlify dashboard).
+   ========================================================================= */
+const FN_URL = '/.netlify/functions/claude';
+
+function getPasscode() {
+  return localStorage.getItem('hex_tool_passcode') || '';
+}
+async function ensurePasscode() {
+  let pc = getPasscode();
+  if (pc) return pc;
+  pc = window.prompt('Enter the tool passcode (ask your L&D team if you don\u2019t have it):') || '';
+  if (pc) localStorage.setItem('hex_tool_passcode', pc);
+  return pc;
+}
+
+// Core call: prompt (string) + optional images ([{data(base64, no prefix), media_type}])
+// Returns { text } on success, or throws an Error with .code set for known failure types.
+async function askClaude(prompt, { images, max_tokens } = {}) {
+  const passcode = await ensurePasscode();
+  let resp;
+  try {
+    resp = await fetch(FN_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, images, passcode, max_tokens }),
+    });
+  } catch (e) {
+    const err = new Error('network'); err.code = 'network'; throw err;
+  }
+  if (resp.status === 401) {
+    localStorage.removeItem('hex_tool_passcode'); // let them retry with a fresh prompt next time
+    const err = new Error('wrong_passcode'); err.code = 'wrong_passcode'; throw err;
+  }
+  if (!resp.ok) {
+    let msg = 'server_error';
+    try { const j = await resp.json(); msg = j.error || msg; } catch (e2) {}
+    const err = new Error(msg); err.code = 'server_error'; throw err;
+  }
+  const data = await resp.json();
+  return data;
+}
+
+// Parse a JSON object out of a text reply, tolerating stray prose around it.
+function extractJson(text) {
+  const match = text.match(/\{[\s\S]*\}/);
+  if (!match) return null;
+  try { return JSON.parse(match[0]); } catch (e) { return null; }
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result).split(',')[1] || '');
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+const ICONS = {
+  clamshell: '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18c0-7 4-12 8-12s8 5 8 12"/><path d="M8 18V9M12 18V7M16 18V9"/></svg>',
+  serpentine: '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6c2 0 2 3 4 3s2-3 4-3 2 3 4 3 2-3 4-3"/><path d="M3 12c2 0 2 3 4 3s2-3 4-3 2 3 4 3 2-3 4-3"/><path d="M3 18c2 0 2 3 4 3s2-3 4-3 2 3 4 3 2-3 4-3"/></svg>',
+  tubular: '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="3" height="14" rx="1.5"/><rect x="10.5" y="5" width="3" height="14" rx="1.5"/><rect x="17" y="5" width="3" height="14" rx="1.5"/></svg>',
+  venting: '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 20V10a5 5 0 0 1 10 0v10"/><path d="M4 20h16"/><path d="M9 4v3M15 4v3"/></svg>',
+  generation: '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4M12 17v4M4.2 4.2l2.8 2.8M17 17l2.8 2.8M3 12h4M17 12h4M4.2 19.8L7 17M17 7l2.8-2.8"/><circle cx="12" cy="12" r="3.2"/></svg>'
+};
+
+const ENTRIES = [
+  {
+    brand: "Amana", model: "95% efficient (tubular)", type: "tubular", generation: "90%+",
+    symptoms: ["30 ppm CO", "loose outer tubes", "tube movement at connection"],
+    pointer: "Both outside tubes loosened during install. Remove plenum/coil, grip each tube and gently twist side to side — you don't need much force to feel movement if a tube has worked loose.",
+    status: "cleared", page: "Deck p.55"
+  },
+  {
+    brand: "Carrier / Bryant", model: "High-Efficiency, pre-2012", type: "serpentine", generation: "90%+",
+    symptoms: ["discolored PVC flue", "tripped rollout switch", "melted or frosted sight glass", "induced draft motor failure"],
+    pointer: "Secondary chamber's plastic liner delaminates from the steel over time, plugging the passage. Watch for rust or dried condensate on the collector box drain — every visible spot on these cells is a failure indicator.",
+    status: "cleared", page: "Deck p.64-66"
+  },
+  {
+    brand: "Armstrong", model: "Ultra 80", type: "serpentine", generation: "80%",
+    symptoms: ["eyelet missing near burner", "partial crack on eyelet"],
+    pointer: "Missing eyelets fall into the blower cavity — check there first with a round mirror. Closest eyelet to the burner on the bottom row is the one to inspect most carefully.",
+    status: "cleared", page: "Deck p.58"
+  },
+  {
+    brand: "Lennox", model: "G-23 (bolted)", type: "serpentine", generation: "80%/90%",
+    symptoms: ["cracking around bolts", "bolted eyelets"],
+    pointer: "Lennox bolts the eyelets to stop them cracking loose — but that shifts the stress elsewhere, so cracking shows up around the bolts instead. Don't assume bolted means safe.",
+    status: "cleared", page: "Deck p.68 area"
+  },
+  {
+    brand: "Trane", model: "90% efficient", type: "serpentine", generation: "90%+",
+    symptoms: ["crack in main chamber cell", "eyelets intact but chamber cracked"],
+    pointer: "Unlike most 90% designs, Trane units on this platform crack in the main chamber cells before the eyelets ever go — don't clear a unit just because the eyelets check out fine.",
+    status: "cleared", page: "Deck p.72-77"
+  },
+  {
+    brand: "York / Luxaire", model: "Tubular", type: "tubular", generation: "80%/90%",
+    symptoms: ["check at collector box"],
+    pointer: "Check tubular chambers at the collector box connection first — that's the highest-yield spot before you commit to a full pull.",
+    status: "cleared", page: "Deck p.90"
+  },
+  {
+    brand: "Any brand", model: "Masonry-vented water heater", type: "venting", generation: "n/a",
+    symptoms: ["water heater backdrafting", "melted draft hood plastic", "orphaned appliance"],
+    pointer: "If a furnace on a shared masonry chimney gets upgraded to 90%+ (PVC vent) and comes off that chimney, the appliance left behind can be orphaned on a flue now oversized for it — and can backdraft. Check what else ties into a shared chimney before disconnecting anything from it.",
+    status: "cleared", page: "Lesson 04 — live class"
+  },
+  {
+    brand: "Any brand", model: "Flue pipe condition check", type: "venting", generation: "n/a",
+    symptoms: ["discolored flue pipe", "milky or coffee-colored flue", "corroded liner"],
+    pointer: "A discolored, milky, or coffee-colored flue pipe is active corrosion, not cosmetic staining. Touch-test liners too — a liner can look intact and still be structurally gone underneath.",
+    status: "cleared", page: "Lesson 04 — live class"
+  },
+  {
+    brand: "Any brand", model: "Sight glass condition check", type: "venting", generation: "n/a",
+    symptoms: ["frosted sight glass", "discolored sight glass", "can't see through sight glass"],
+    pointer: "The name \"sight glass\" implies you should be able to see through it. If you can't, that's a real finding — don't assume it's just old and dirty.",
+    status: "cleared", page: "Lesson 04 — live class"
+  },
+  {
+    brand: "Any brand", model: "60% atmospheric identification", type: "generation", generation: "60%",
+    symptoms: ["standing pilot", "large metal flue 3-5 inch", "no inducer", "louvered cabinet doors"],
+    pointer: "Natural draft only, no mechanical assist. Roughly 40% of the fuel's heat goes straight up the chimney. Cracks typically appear at the top, where the chamber narrows.",
+    status: "cleared", page: "Lesson 05 — live class"
+  },
+  {
+    brand: "Any brand", model: "80% induced-draft identification", type: "generation", generation: "80%",
+    symptoms: ["inducer motor", "pressure switch", "closed burner box with sight glass"],
+    pointer: "An inducer motor actively pulls exhaust through the system; a pressure switch confirms it's spinning before the burners are allowed to fire. Chamber passes get narrower — the same geometry behind the serpentine popped-eyelet pattern.",
+    status: "cleared", page: "Lesson 05 — live class"
+  },
+  {
+    brand: "Any brand", model: "90%+ condensing identification", type: "generation", generation: "90%+",
+    symptoms: ["PVC intake and exhaust", "condensate trap", "secondary heat exchanger"],
+    pointer: "A second heat exchanger stage cools the exhaust enough to condense, which is what makes PVC venting possible. Check the condensate trap every visit — a plugged trap is one of the most common field indicators of a struggling secondary chamber.",
+    status: "cleared", page: "Lesson 05 — live class"
+  },
+  {
+    brand: "Bard", model: "Reference pending", type: "clamshell", generation: "TBD",
+    symptoms: ["awaiting manual page"],
+    pointer: "Placeholder — real page image, chamber detail, and field notes go here once the 2026 manual pages are reviewed and Heat Exchanger Experts has confirmed we're clear to include their content.",
+    status: "pending", page: "TBD — 2026 manual"
+  },
+  {
+    brand: "Goodman", model: "Reference pending", type: "clamshell", generation: "TBD",
+    symptoms: ["awaiting manual page"],
+    pointer: "Placeholder — real page image, chamber detail, and field notes go here once the 2026 manual pages are reviewed and Heat Exchanger Experts has confirmed we're clear to include their content.",
+    status: "pending", page: "TBD — 2026 manual"
+  }
+];
+
+const MANUAL_INDEX = [
+["36–37","Amana / Goodman (high-efficiency, cont'd)","Goodman GMS90703BXA","0503091452","Condensation pooling at back of secondary — furnace mis-leveled/mis-pitched. Borescope (Teslong camera) technique shown."],
+["74–75","Carrier Package Unit / Coleman (mobile home)","—","—","Tubular chamber, package/rooftop unit, 3 of 5 tubes cracked. Coleman: standing-pilot series common in mobile homes; combustion air chute leak causes flame impingement."],
+["110–111","Johnson Air-Ease","G65-130D-1 / HAS130BD","13878-J8060 / 13A67-JE267","Power-vented rooftop unit. Includes a photo of an actual official 'unsafe, do not use' utility tag."],
+["118–119","Lennox Bolted G-23 (cont'd, steps 3+)","G23Q3/4-100-1","5894829334","Step 3 of bolted-chamber inspection; same procedure covers G-23 through G-50."],
+["116–117","Lennox G-23 / Bolted G-23 (steps 1–2)","G2303-100-1 / G23Q3/4-100-1","5893K-55579 / 5894829334","Completes the bolted-chamber sequence (steps 1–2)."],
+["120–121","Lennox G-24 (tubular) / G-26 intro","G24M2-60A-4 / G26Q3-75-1","6396G78624","G-26 field note: seems to fail more often on propane than natural gas."],
+["122–123","Lennox G-26 (90%)","G26Q3-75-1 / -2","58935J56139","Serpentine; top row of eyelets fails first on 90% units — limit-switch-opening inspection only."],
+["128–129","Lennox Pulse / Lennox 'S' & 'E' (SLP98)","G2103-100-3 / SLP98UH090XV48C","n/a / 5Y29H05654","Lennox Pulse not in current deck. Tilt-installation note for post-2010 Lennox units."],
+["126–127","Lennox G-61 / Lennox Pulse (recall)","G61MPV-368-070-01 / G2103-100-3","5905B10267","Recall: Lennox Pulse G14 (1982–92) & G21 (1992–late 90s) — dated April 1997, secondary chamber corrosion + pressure-decay test."],
+["130–131","Lennox SLP98 (cont'd)","SLP98UH090XV48C-09","5919H05654","Field story: a mouse died inside the heat exchanger; CO in the exhaust exceeded 1,000 ppm."],
+["132–133","Lennox EL / Whisper Heat","EL195UH090XE48C-03, EL296UH090XV60C-02 / G203/4E-125-2","various","Installation-pitch failure: primary chambers fail from corrosion when installed 'dead-nut level' or pitched backward instead of toward the drain."],
+["112–113","Lennox Duracurve/Duraglass family (G-8–G-23)","G1002-82-1","5871K00453","Historical lineage: G-7 'Tall Boy' (1950s), G-10 (1970s), G-12 counterflow, G-16 (1980s 80%), G-20 — shared 'S'-shaped chamber since 1960s."],
+["114–115","Lennox Counterflow","G12RD2-82 / G16RQ3-75-9","5879C01794 / 5890M02910","Reminder: check the whole chamber, not just the usual spot — a defect elsewhere is still a defect."],
+["152–153","Ruud 90% (1989) / Ruud (1991)","UGEB10EE GS / FG491-4927","NN5D307F43892816 / UGDA075CERN3D184","Rheem-family bar-cracking pattern; manufacturer repair-kit note."],
+["150–151","Ruud Silhouette / Silhouette II","UGDG-100BRJR / UGPH07-EAVER","CB5D307-F25926217 / DF50302F06-9703251","Matches deck content; adds model/serial."],
+["162–163","Trane 80% / 90%","TUD080C936B0","J29500095","80% serpentine + 90% clamshell — different from Trane content already in the deck."],
+["164–167","Trane 90% BLU/D-K series (×3)","TUX080C-942C2 / TUC080C94286 / TUX080C94283","R315HJC70 / N365K0Y7G / L255NU876","New root cause: cracks traced to the required 1-1/2\" clearance above the furnace top not being observed when evaporator coils were installed."],
+["160–161","Trane/American Standard (secondary)","TUD1D120A9601AA / TUD1B100A9361AA","54650AN1G / 7322RR51G","New failure mode: plastic collector box on the secondary chamber goes brittle and cracks over time. Dual-lens borescope technique for 360° inspection."],
+["158–159","Tempstar (1994) / Trane-American Standard primary","NUG5100BHB1 / TUD1D120A9601AA","L933622494 / 54650AN1G","Strong quote: 'No cracks, holes, or excessive corrosion should ever be considered acceptable — if those conditions were acceptable, manufacturers would produce them that way from the factory.'"],
+["156–157","Tappan / Tempstar","GUF120DE3 / NULE080DG02","72-1-09111 / L883223603","Both sold under multiple brand names via shared OEM design (American Furnace Co. family)."],
+["154–155","Sears (Heil-built) / Singer","867164240 / n/a","43681215 / GB1104-10H8","New inspection location: check portholes behind the draft diverter shield — commonly missed."],
+["144–145","Rheem wide-chambered / Rheem Reclaimer","3204125","F25748051","Second real photo of an official utility 'unsafe — do not use' tag."],
+["146–147","Rheem Counterflow / Ruud-Rheem 80%","3010-175JD / RGEB-10EE-GS","CN3D107F30755745 / F28894621","Quote: 'Moving your head a half inch further in when inspecting the chamber can make the difference between life and death for a homeowner.'"],
+["140–141","Rheem narrow-chambered","RGDA-0452-BR","CK3D106F-40841736","Wide-chambered Rheem cracks at the firewall; narrow-chambered Rheem cracks at the back where it narrows — same brand, different first-check location."],
+["142–143","Rheem Drum (recalled)","RGED-06EMAES / RGED10ERAJS","BU50603-R-M19921254 / BU5D607M-34925857","Recall confirmed — manual states no chamber inspection needed at all once recall status is verified."],
+["138–139","Rheem Criterion / Rheem 90% Drum","RG0G10-EAMER / UGED100RAJ5","CW5D302R-33931711 / Q5P707M4293","Manual directs readers to cpsc.gov to check brand/serial for recall status — direct validation of the CPSC-based research approach."],
+["100–101","ICP / Comfortmaker 80% (shared w/ Carrier/Bryant/Payne/Day & Night)","N8MSN0902120A1","A104714273 (Nov. 2010)","Cleanest statement of the dual-safety-test rule: must be free of visual defects AND within CO thresholds — either failing alone makes it unsafe."],
+["102–103","ICP 90% (general + serpentine)","NTGM050EFA3 / NUGS1258HB2","L992444373 / L941954484","Story: a tech trained at the seminar caught a 300 ppm crack that would otherwise have gone unnoticed."],
+["94–95","Heil serpentine (1996) / Heil 80%","H8MPN125J2081","A062444873 (2006)","Recall/bulletin: Heil eyelet-problem bulletin dated 7/28/00."],
+["96–97","Heil 80% (nox rods) / Heil 90%","H8MPN125J2081 / N9MP2125J2081","A062444873 / A0406490745 (2004)","90% units crack in the same spot as 80% units, but the chamber is flipped upside down — access from the top, not the blower."],
+["98–99","Heil 90% / Holly (40+ yrs)","NUGKI25DK06867769445 / 100-VF","L910677895 (1991) / 630","Quote: 'The POTENTIAL to put out CO condemns a furnace — not tested levels.'"],
+["108–109","Janitrol (aluminized steel + serpentine)","GU0753REUC.S","910717253","New brand confirmed. Serpentine variant matches Heil/Arcoaire eyelet-crack family."],
+["106–107","Janitrol serpentine (detail)","GMP100-3V","9305093644","Popped eyelet clamps can cause audible rattling during operation — a second confirmed auditory cue."],
+["88–89","General Electric / Goodman 90%","BLU166C94880","511903","GE confirmed as new brand. Quote: 'If you're thinking of Murphy's Law... then you haven't read this manual.'"],
+["90–91","Goodman 95% Variable Speed (×2)","GMV9509Q5DX8B / GMV9S0704CX8B","0709003928 / 0907707849","Dramatic real reading: combustion analysis found CO over 75,000 ppm (normal is under 400); utility shut the furnace off on the spot."],
+["78–79","Cozy Wall Furnace (new furnace category)","W355G","17190964","Natural-draft wall furnace, no ductwork — a category distinct from forced-air entirely. Attributed field story: a tech found this 3 days after attending Heat Exchanger Experts training."],
+["84–85","Fedders","CUG045N1D / CUG105N0D, 120N3D","KP347566 / LM627848, EG771277","New brand. Stated rate: 99% of the time, this clamshell cracks in the back."],
+["86–87","Fraser Johnston / Fraser Johnston 90%","120CJ / PBNULD12N1008","277814 / EAYM002717","New brand. Cautionary story: sloppy handyman weld-patch attempt found — 'a furnace crack cannot be patched or re-welded, not acceptable practice for a professional.'"],
+["104–105","Intertherm (drum type)","MIG8070A8W","MIG00080206","New brand confirmed — another drum/gravity-type chamber design."],
+["80–81","Dornback Gravity (new chamber family)","SG90NS","9901-0035","Drum-style gravity furnace — a fourth chamber family beyond clamshell/serpentine/tubular. Installer error (unbalanced flame spreader) split the drum after 5 years."],
+["92–93","Steel Gravity w/ Radiator / Heil serpentine","n/a (40+ yrs)","n/a","Live smoke-candle test shown — matches the historical 'smoke bomb' leak-test method."],
+["34–35","Amana 95% / Amana-Goodman-Daikin family","AMH9507038XAA","0610148599 / 1105754461","Material distinction: Goodman uses aluminized steel; Amana/Daikin use lower-grade stainless — Goodman holds up better under heat/condensate stress."],
+["32–33","Amana 90%+","AMH950905CXAB","1105754461","Source of the existing '30 ppm CO, loose tubes' deck story. New tips: always use a level on install; always derate at altitude + static pressure test after."],
+["30–31","Amana (business insight)","GH105DN3","AD92950077","Subdivision-pattern insight: track which brand a subdivision's builder used — neighbors may share the same predictable crack pattern. Good lead source."],
+["50–51","Armstrong Ultra 80% (×2)","GUJ150D-120-28 / GCJ075D-14-3A","8496A12541 / 58497C21036 (1997)","Matches deck content; adds model/serial."],
+["52–53","Armstrong Ultra 80 / Ultra II","EG6G150DCZ0-4A / EG6E80DC16-8","8493E18129 / A147018NA (1992)","Light-through-the-crack test via the burner opening, as an alternative to the mirror method."],
+["54–55","Armstrong Ultra 90 (cont'd)","GUK125D20-1A","8493112858","Confirms: 90% units crack at the top first, opposite of 80% units."],
+["46–47","Armstrong (×2, recall detail)","G64-80D / EG6F100DC16-3","147902","Recall detail: Armstrong recalled units with model numbers beginning 'EG6B' — verify exact prefix before ruling recall in or out."],
+["48–49","Armstrong / Armstrong Clamshell","GCJ100D12-4A / EG6G150DC20-3","8498D17667 / A2070 1FMA","Story: homeowner declined repair on a 1\" crack; same furnace cracked in 3 chambers within 2 years."],
+["16–17 / 18–19","Armstrong Horizontal 80% (+ full 12-step method)","EG86125DC14-2A / EG8G100DC14-1","8493A21068 / A10130HNA (1992)","'Horizontals' — a distinct installation-orientation category, 12-step method, inspected differently than upright units."],
+["44–45","Arcoaire 1980's / Arkla (discontinued)","GUF75A008-N","000211300P28-0315","Arkla directly matches the CPSC recall brand (external vent corrosion) from the public-sources research."],
+["40–41","Arcoaire 1989 80% (detailed)","GUA100A-016AIN","R893700449","Detailed 12-screw teardown procedure; oil/surfactant technique repeated."],
+["42–43","Arcoaire clamshell / serpentine","G01100A0128IN","L94I435441","Matches existing deck detail; adds model/serial."],
+["28–29","AirPro 80% / Amana (auditory cue)","FG8D12520MU12A / GH105DN3","WKMM056709 / AD92950077","New auditory cue: expansion/contraction 'thump or snap' can indicate a crack, especially on older clamshell units."],
+["26–27","Horizontal – Rheem / AirPro 80%","BGU1502A","941153753","Rheem horizontal: check the gas pipe weld seam first — a different first-check location than upright models."],
+["22–23","Horizontal – Ducane / Fraser Johnston","FPBB075A3B","1741090417 20533402","Ducane chamber sold under the Lennox name too in horizontal position. Fraser Johnston: rounded burner compartments crack at the seams."],
+["20–21","Horizontal – Consolidated (major multi-brand recall)","Many prefixes — see note","—","30+ brand names built by defunct Consolidated Industries (1983–95), recalled for house fires: Addison, Amana, American Best, American Standard, Bard, Century, Comfort Aire, Coleman, Franklin Electric, Goettl, Goodman, GMC, Hamilton Electric, Heat Controller, Janitrol, Johnstone, Keeprite, Kenmore, Liberty, Magic Chef, P.F.C., Premier, Sears, Sunbelt, Sunburst, Sundial, Sun Glow, Trane, Weatherking. If seen — shut off gas immediately, no inspection needed."],
+["38–39","American Standard (×2)","UGF-120E4 / GUB-125-E5 / AUD140C960J1","H66D00158 / Z0B5WY120","New technique: to tell if a weld seam is part of the chamber, check what's behind it — if air passes through to the airstream, it's part of the chamber. Air baffles can create hot spots, causing cracks right after warranty expires."],
+["56–57","Bard / Bryant Series SB-D","IH85D48C / 125-393U","0080585D84 / 45S113179","Confirms deck's Bard content. Bryant: dimpled electronic-weld cracks up to 1\" long."],
+["58–59","Carrier/Bryant Super Saver / Bryant","58SS100-BC / 395CAV02-4055","5184C59096 / 3889A19652","Confirms welded (not eyelet) chamber construction on this line."],
+["60–65","Carrier/Bryant High-Efficient (pre-2012 / 2013-present)","various","various","Full plugged-secondary symptom list and complete bulletin model list confirmed."],
+["66–67","Carrier 90% (1993) / Carrier 90 Plus","398AAW0-48080D","1287A06472","Matches deck content; adds model/serial."],
+["68–69","Carrier (motivation story)","58GP125-1","8A35439","A seminar attendee (home inspector) checked his own parents' furnace after training and found a 20+ year old unit actively venting fumes. Section title: 'Take pride in your profession: your work saves lives.'"],
+["70–73","Carrier (dimple weld detail / first 80% ever made / Package Unit)","58PAV070-12 / 397HAW-048120 / 48TME007---501","13F7A05946 / 4083C86029 / 0906G4045R","Confirms feeling for cracks by finger through the limit-switch opening."],
+["8–9 / 6–7","(Front matter — Clamshell/Serpentine/Tubular procedures)","—","—","Sharp stat: even with light and mirror, a visual inspection can still miss 80% of the chamber's surface due to undulations in shape."],
+["10–11 / 14–15","(Front matter — CO Testing, Combustion Analysis, Clean & Safety Check)","—","—","Manual attributes the 400 ppm figure inconsistently — once to IFGC (tied to 80%/90%+ tier), once to CPSC directly. Needs reconciling before repeating as settled fact. Recommended tools: Seitron PM1C CO detector, Seitron NOVO Combustion Analyzer."],
+["4–5 / i–ii","(Front matter — Inspection Methods intro / Preface / Introduction)","—","—","Confirms Ellis Prach's sons Russell and Christopher now run the training nationwide. States 3 'main' chamber types (clamshell/serpentine/tubular) — gravity/drum treated as an additional, less-common category."],
+["iii / 1","(Front matter — How Can a HX Fail? / Rules & Regs)","—","—","New detail: some jurisdictions regulate who is authorized to inspect a furnace at all — worth knowing before condemning equipment as a non-licensed inspector."],
+["12–13","(Front matter — Gas Pressure procedure / Furnace Sizing)","—","—","New 7-question furnace-sizing checklist (install date, home additions, insulation upgrades, efficiency comparison, duct capacity, duct cleaning history)."],
+["134–135","Lennox Whisper Heat / Mueller Climatrol","G20Q3E-75-I","5891A09403","Documentation standard: always log serial #, model #, date/time, technician name, stated opinion. Mueller: schedule older-furnace customers for inspection in late summer/early fall."],
+["172–175","York (bracket check / tubular / Stellar)","UG080D07N18 / P8KM-LD12N060A / P3UCD08N0-6101A","various","Check brackets/face plate before an oil test. Newer (post-1992) York-family chambers crack at the firewall — a different location than older units."],
+["n/a","(Back matter — program/marketing page)","—","—","Founded 1993 by Ellis Prach; sons now run training. QR code invites techs to submit their own field finds for future editions."],
+];
+const MANUAL_RECALLS = [
+  ["York/Luxaire/Coleman","2001","~7,000 mid-efficiency 80% furnaces recalled for detached heat exchanger tubes."],
+  ["Trane","2017","Improperly assembled internal component causing elevated CO under certain conditions."],
+  ["Arkla/Preway/Arco","historic","2,036 external-vent corrosion complaints, 7 CO-symptom allegations (CPSC). Manufacturers defunct — field inspection is the only remaining safeguard."],
+  ["Oil/wood combo furnaces","1984 (CPSC warning)","Documented weld-failure pattern at the top of the heat exchanger, between the creosote collector and firebox doors."],
+  ["Lennox Pulse (G14/G21)","April 1997","Secondary heat exchanger corrosion + gas-cabinet pressure-decay test required."],
+  ["Armstrong ('EG6B' models)","—","Recalled — verify exact model prefix before ruling in or out."],
+  ["Coleman (UPG bulletin)","Feb. 4, 2005","Model DGAT075BOF — heat exchanger cracking, furnace-wrapper burn-through. Program at dgatprogram.com."],
+  ["Heil (eyelet bulletin)","7/28/00","Named, dated bulletin on the eyelet-cracking problem."],
+  ["Rheem Drum","active","Manual states: no chamber inspection needed once recall status is confirmed."],
+  ["Consolidated Industries","1983–1995","30+ brand names, house-fire risk, manufacturer defunct since 2000 — shut off gas immediately if found, no inspection needed."],
+];
+const MANUAL_NEW_BRANDS = ["American Standard","Bryant (standalone)","Cozy","Day & Night","Daikin (via Amana/Goodman family)","Fedders","Fraser Johnston","General Electric","ICP (standalone)","Intertherm","Janitrol (standalone)","Mueller Climatrol","Nordyne","Premier","Sears","Singer","Tappan","Tempstar (standalone)"];
+
+const principles = [
+  "\u201cNo such thing as a safe crack or hole.\u201d",
+  "\u201cThe POTENTIAL to put out CO condemns a furnace \u2014 not tested levels.\u201d",
+  "\u201cA safe furnace must meet both criteria \u2014 free of visual defects AND within CO thresholds. Either failing alone makes it unsafe.\u201d",
+  "\u201cIf those conditions were acceptable, manufacturers would produce them that way from the factory.\u201d",
+];
+const MANUAL_PRINCIPLES = [
+  "\u201cNo such thing as a safe crack or hole.\u201d",
+  "\u201cThe POTENTIAL to put out CO condemns a furnace \u2014 not tested levels.\u201d",
+  "\u201cA safe furnace must meet both criteria \u2014 free of visual defects AND within CO thresholds. Either failing alone makes it unsafe.\u201d",
+  "\u201cIf those conditions were acceptable, manufacturers would produce them that way from the factory.\u201d",
+];
+const MANUAL_TECHNIQUES = [
+  "Audible thump/snap (thermal expansion) or rattle (loose eyelet) as an early warning sign.",
+  "Check what's behind a weld seam \u2014 if air passes through to the circulated stream, it's part of the chamber.",
+  "Light-through-the-burner-opening as an alternative to the mirror method.",
+  "Check brackets/face plate for cracks before running an oil test.",
+  "Subdivision-level pattern tracking as a business-development / lead-source tool.",
+  "Even light + mirror can miss up to 80% of a chamber's surface due to undulations \u2014 don't stop at a quick look.",
+];
+const MANUAL_FAMILIES = [
+  ["Gravity / Drum", "Dornback, Rheem (recalled), Intertherm — a fourth chamber family beyond clamshell/serpentine/tubular."],
+  ["Wall Furnace", "Cozy — natural draft, no ductwork at all, a category outside forced-air furnaces entirely."],
+  ["Horizontal (orientation, not a chamber type)", "Armstrong, Rheem, Ducane, Fraser Johnston, Consolidated, Goodman, Lennox, Premier — inspected via a distinct 12-step method."],
+];
+const MANUAL_EXTERNAL_REFS = [
+  ["device.report/hvac", "https://device.report/hvac", "Free-to-browse manufacturer OEM manuals (install/user/service), indexed by brand and model."],
+  ["inspectapedia.com \u2014 HVAC Manuals index (A\u2013E, F\u2013I, J\u2013O, T\u2013Z)", "https://inspectapedia.com/heat/HVAC_Manuals_Air_Conditioners_Boilers_Furnaces.php", "Long-maintained directory of free OEM manuals, wiring diagrams, and brand-specific data-tag/age decoders."],
+  ["manualslib.com", "https://www.manualslib.com/", "Large free repository of OEM manuals searchable by brand and exact model number."],
+];
+
+
+/* =========================================================================
+   DATA PLATE DECODER
+   Serial-number age decoding sourced from the long-standing "How to
+   Determine Furnace Age" reference (Building Intelligence Center /
+   Honest Home Inspections, hosted at inspectapedia.com) — a widely used
+   home-inspection field reference. That source carries its own explicit
+   disclaimer that formats are not guaranteed and vary by era; this tool
+   inherits that caution and shows a confidence level on every decode.
+   Model-number segment legends sourced from a U.S. Department of Energy
+   furnace-efficiency rulemaking technical appendix (govt/public domain),
+   which documents how Amana, Carrier, ICP, Goodman, Lennox, Armstrong,
+   Trane/American Standard, Rheem, York and Nordyne structure their model
+   numbers. Neither source is the Heat Exchanger Experts manual — nothing
+   here comes from that manual.
+   ========================================================================= */
+
+function yearFromYY(yy, opts = {}) {
+  const n = parseInt(yy, 10);
+  if (isNaN(n)) return null;
+  const currentYY = new Date().getFullYear() % 100;
+  // Prefer 2000s if it doesn't land in the future; otherwise assume 1900s.
+  const candidate2000 = 2000 + n;
+  if (candidate2000 <= new Date().getFullYear()) return candidate2000;
+  return 1900 + n;
+}
+
+const MONTH_LETTERS_SKIP_I = { A:1,B:2,C:3,D:4,E:5,F:6,G:7,H:8,J:9,K:10,L:11,M:12 };
+const monthName = (m) => m ? ["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][m] : "";
+
+const SERIAL_DECODERS = {
+  goodman: (s) => {
+    if (!/^\d{4,}/.test(s)) return null;
+    const year = yearFromYY(s.slice(0,2));
+    const week = parseInt(s.slice(2,4), 10);
+    if (!year || isNaN(week) || week < 1 || week > 53) return null;
+    return { confidence: 'high', year, week,
+      note: 'Goodman: first two digits are the year, next two are the week of manufacture.' };
+  },
+  armstrong: (s) => {
+    if (s.length < 5) return null;
+    const yy = s.slice(2,4), m = s[4]?.toUpperCase();
+    if (!/^\d{2}$/.test(yy) || !MONTH_LETTERS_SKIP_I[m]) return null;
+    return { confidence: 'medium', year: yearFromYY(yy), month: MONTH_LETTERS_SKIP_I[m],
+      note: 'Armstrong/Lennox family, 1974–present format (3rd–4th digit = year, 5th = month letter). Pre-1974 units use a different, older scheme.' };
+  },
+  lennox: (s) => {
+    if (s.length < 5) return null;
+    const yy = s.slice(2,4), m = s[4]?.toUpperCase();
+    if (!/^\d{2}$/.test(yy) || !MONTH_LETTERS_SKIP_I[m]) return null;
+    return { confidence: 'medium', year: yearFromYY(yy), month: MONTH_LETTERS_SKIP_I[m],
+      note: 'Lennox modern format (varies by era — Lennox publishes its own nomenclature guide, linked below).',
+      link: 'https://www.lennox.com/pdfs/Lennox%20Model%20and%20Serial%20Nomenclature.pdf' };
+  },
+  carrier: (s) => {
+    const table = {A:1969,B:1970,C:1971,D:1972,E:1973,F:1974,G:1975,H:1976,J:1977,K:1978,M:1979,
+      N:1980,P:1981,Q:1982,R:1983,S:1984,U:1985,V:1986,W:1987,X:1988,Y:1989,Z:1990};
+    const first = s[0]?.toUpperCase();
+    if (table[first]) {
+      return { confidence: 'medium', year: table[first],
+        note: 'Carrier/Bryant/Payne legacy format (1969–1990 only, first letter = year). Modern (2000s+) serials encode week+year in the first four digits, but the exact digit order is inconsistent across my sources — treat a modern-format guess as low confidence and verify.' };
+    }
+    return null;
+  },
+  icp: (s) => {
+    if (s.length < 5) return null;
+    const yy = s.slice(1,3), ww = s.slice(3,5);
+    if (!/^\d{2}$/.test(yy) || !/^\d{2}$/.test(ww)) return null;
+    return { confidence: 'medium', year: yearFromYY(yy), week: parseInt(ww,10),
+      note: 'ICP family (Tempstar / Heil / Comfortmaker / Arcoaire / AirQuest / KeepRite), 1994+ style: 2nd–3rd digit = year, 4th–5th = week.' };
+  },
+  trane: (s) => {
+    const table = {'9':2009,'8':2008,'7':2007,'6':2006,'5':2005,'4':2004,'3':2003,'2':2002,
+      Z:2001,R:2000,P:1999,N:1998,M:1997,L:1996,K:1995,J:1994,H:1993,G:1992,F:1991,E:1990,
+      D:1989,C:1988,B:1987,S:1986,Y:1985,X:1984,W:1983};
+    const first = s[0]?.toUpperCase();
+    if (table[first]) {
+      return { confidence: 'medium', year: table[first],
+        note: 'Trane/American Standard: first character maps to year — documented for 1987–2009. 2010s-and-later units likely continue a similar leading-digit scheme but that isn\u2019t confirmed in my sources; cross-check with Trane\u2019s own serial lookup for anything after 2009.' };
+    }
+    return null;
+  },
+  bard: (s) => {
+    const table = {A:1,B:2,C:3,D:4,F:5,H:6,J:7,K:8,L:9,M:10,N:11,P:12};
+    if (s.length < 6) return null;
+    const m = s[3]?.toUpperCase(), yy = s.slice(4,6);
+    if (!table[m] || !/^\d{2}$/.test(yy)) return null;
+    return { confidence: 'medium', year: yearFromYY(yy), month: table[m],
+      note: 'Bard, June 1980\u2013present format (4th character = month letter, 5th\u20136th = 2-digit year). Units from 1962\u20131980 use two different, older schemes.' };
+  },
+  rheem: () => null,
+  york: () => null,
+  amana: () => null,
+};
+
+// Public model-number segment legends (U.S. DOE furnace nomenclature appendix).
+// Reference only — not auto-parsed against a typed-in model number, since
+// real-world model numbers vary too much by era to match safely. Match your
+// own model number against the columns by hand.
+const MODEL_LEGEND = {
+  amana: { label: 'Amana (classic 80% GUID-style)', example: 'G U I D 045 C A 30',
+    cols: ['Product', 'Supply', 'Furnace type', 'Features', 'Input (Btuh)', 'Series', 'NOx cert.', 'Airflow (tons)'],
+    vals: ['G = Gas', 'U = Upflow, D = Downflow', 'I = Induced draft (80%)', 'D = Air Command 80', '045 = 45,000', 'C = 3rd series', 'A = standard (not NOx)', '30 = 3 tons'] },
+  goodman: { label: 'Goodman', example: 'GMNT 040 3',
+    cols: ['Unit type', 'Input (Btuh)', 'Cooling (tons)'],
+    vals: ['GMNT = multi-position gas furnace', '040 = 40,000', '3 = 3 tons'] },
+  carrier: { label: 'Carrier (58-series)', example: '58WAV 045 150 08',
+    cols: ['Series', 'Input (Btuh)', 'Nominal size', 'Airflow (CFM)'],
+    vals: ['58WAV = high-eff induced combustion upflow', '045 = 44,000', '150', '08 = 800 CFM'] },
+  icp: { label: 'ICP (Tempstar / Heil / Comfortmaker / Arcoaire)', example: 'N 9 MP 2 075 F 12 A',
+    cols: ['Brand', 'Efficiency', 'Configuration', 'Venting', 'Input (Btuh)', 'Cabinet', 'Airflow', 'Rev.'],
+    vals: ['N = generic, T = Tempstar', '9 = condensing, 8 = non-condensing', 'MP/UP/DN/HZ/DH', '1 or 2-pipe, L=low NOx, V=variable speed', '075 = 75,000', 'B/J/F/L width codes', '08-20 = CFM x100', 'minor rev letter'] },
+  lennox: { label: 'Lennox', example: 'G 40 UH 24 A 045 X',
+    cols: ['Type', 'Series', 'Config', 'Add-on cooling', 'Cabinet width', 'Input (Btuh)', 'CA emissions'],
+    vals: ['G = gas furnace', '40=Merit 80%, 50=Elite 80%, 60=2-stage 80%', 'UH/DF', '24-60 = 2-5 tons', 'A-D width codes', '045 = 44,000', 'X = meets CA NOx'] },
+  armstrong: { label: 'Armstrong', example: 'G 1N 80 A H 100 D 20 B 1A',
+    cols: ['Family', 'Furnace type', 'AFUE', 'Series', 'Config', 'Input x1000', 'Motor', 'Max CFM x100', 'Cabinet'],
+    vals: ['G = gas', '1N/1D/2D stage+vent', '80 = 80% nominal', 'A/B/C series', 'H/U/T/R config', '100 = 100,000', 'D = direct drive', '20 = 2000 CFM', 'A/B/C width'] },
+  trane: { label: 'Trane / American Standard', example: 'T U Y 080 R 9 V3 V 0',
+    cols: ['Brand', 'Config', 'Type', 'Input (mbtu/h)', 'Design change', 'Power/fuel', 'Cooling capacity', 'Minor rev'],
+    vals: ['T=Trane, A=American Standard', 'U/D upflow/downflow', 'C/D/E/X/Y induced-condensing variants', '080 = 80,000', 'C/R stage', '115V natural gas', 'V3-V5 variable speed tons', 'service digit'] },
+  rheem: { label: 'Rheem / Ruud (non-condensing)', example: 'R G P J 07 E A U E R',
+    cols: ['Brand', 'Fuel', 'Furnace type', 'Series', 'Input (kBtu/h)', 'Ignition', 'Variation', 'Blower', 'Cooling', 'Region'],
+    vals: ['R=Rheem, U=Ruud, W=Weatherking', 'G = natural gas', 'D/L/P config', 'J/A/K/L Acclaim series', '07 = 75', 'E/N electric ignition', 'A/B cabinet', 'U/M/R blower size', 'CFM range', 'R=US, A=Canada'] },
+  york: { label: 'York', example: 'P4 HU A 12 N 032 01',
+    cols: ['Config', 'Cabinet width', 'Airflow (CFM)', 'Output (Btuh)'],
+    vals: ['HU = upflow/horizontal', 'A-D width codes', '12-20 = 1200-2000 CFM', '032 = 32,000'] },
+};
+function normalizeBrandKey(brand) {
+  const b = (brand || '').toLowerCase();
+  if (b.includes('amana')) return 'amana';
+  if (b.includes('goodman')) return 'goodman';
+  if (b.includes('carrier') || b.includes('bryant') || b.includes('payne')) return 'carrier';
+  if (b.includes('tempstar') || b.includes('heil') || b.includes('comfortmaker') || b.includes('arcoaire') || b.includes('icp') || b.includes('keeprite') || b.includes('airquest')) return 'icp';
+  if (b.includes('lennox')) return 'lennox';
+  if (b.includes('armstrong') || b.includes('ducane') || b.includes('aire-flo') || b.includes('concord')) return 'armstrong';
+  if (b.includes('trane') || b.includes('american standard')) return 'trane';
+  if (b.includes('rheem') || b.includes('ruud')) return 'rheem';
+  if (b.includes('york') || b.includes('luxaire') || b.includes('coleman')) return 'york';
+  if (b.includes('bard')) return 'bard';
+  return null;
+}
+
+function decodeSerialForBrand(brandKey, serial) {
+  const clean = (serial || '').replace(/\s+/g, '').toUpperCase();
+  if (!clean) return null;
+  const fn = SERIAL_DECODERS[brandKey];
+  return fn ? fn(clean) : null;
+}
+
+const chipRow = document.getElementById('chipRow');
+
+/* =========================================================================
+   CODES & REGS BY LOCATION
+   State fuel-gas-code adoption sourced from the same up.codes/state-code
+   research behind the trainer deck's own state table. Carbon monoxide
+   alarm statute summaries sourced from the National Conference of State
+   Legislatures' compilation (ncsl.org, last updated Sept 29, 2025) — a
+   nonpartisan legislative research body, not an advocacy or sales site.
+   Scope note built into the tool itself: this covers the STATE layer only.
+   Utility-specific procedures (right-of-entry, shutoff/reconnect rules,
+   notification duties) are set contract-by-contract per gas utility and
+   cannot be generalized here. Municipal/home-rule amendments exist on top
+   of state code in some states (Illinois flagged explicitly, per the
+   deck's own existing caution) and aren't embedded either. This is
+   reference material to start from, not a legal compliance determination
+   — flag anything that looks off to Sila's compliance/legal contact
+   before treating it as authoritative.
+   ========================================================================= */
+const STATE_REGS = {
+  CT: { name: 'Connecticut', code: 'NFPA 54 via CT Fire Safety Code (IFGC not adopted)', bookmark: 'nfpa.org free access — NFPA 54', bookmarkUrl: 'https://www.nfpa.org/for-professionals/codes-and-standards/list-of-codes-and-standards/free-access',
+    co: 'Conn. Gen. Stat. § 29-292 — CO detectors required in new residential buildings (1–2 family) and all public/nonpublic schools.' },
+  DE: { name: 'Delaware', code: '2018 IFGC statewide baseline (some counties moving to 2021)', bookmark: 'up.codes/codes/delaware', bookmarkUrl: 'https://up.codes/codes/delaware',
+    co: 'Del. Code tit. 16 § 6602C — CO detectors required in lodging establishments. No general statewide dwelling-unit statute found; check local ordinance.' },
+  IL: { name: 'Illinois', code: '2021 IFGC statewide — municipalities may vary (home rule)', bookmark: 'up.codes/codes/illinois', bookmarkUrl: 'https://up.codes/codes/illinois',
+    co: 'Ill. Rev. Stat. ch. 430 § 135/10 — CO alarm required within 15 ft of every room used for sleeping, in every dwelling unit. Schools separately required under ch. 105 § 5/34-18.49.',
+    localFlag: true },
+  MA: { name: 'Massachusetts', code: 'Fuel gas governed separately — 248 CMR', bookmark: 'up.codes/codes/massachusetts', bookmarkUrl: 'https://up.codes/codes/massachusetts',
+    co: 'Mass. Gen. Laws ch. 148 § 26F\u00bd — CO alarms required in any residential structure with fossil-fuel burning equipment or enclosed parking.' },
+  MD: { name: 'Maryland', code: '2018 IFGC (MD Fuel Gas Code) + 2021 IMC', bookmark: 'up.codes/viewer/maryland/ifgc-2018', bookmarkUrl: 'https://up.codes/viewer/maryland/ifgc-2018',
+    co: 'Md. Code, Pub. Safety § 12-1101 to 1106 — CO alarms required outside sleeping areas / within a set distance of CO-producing equipment; disabling an alarm is prohibited; sellers must disclose fossil-fuel heat and alarm status.' },
+  ME: { name: 'Maine', code: 'NFPA 54 via Maine Uniform Building & Energy Code', bookmark: 'nfpa.org free access — NFPA 54', bookmarkUrl: 'https://www.nfpa.org/for-professionals/codes-and-standards/list-of-codes-and-standards/free-access',
+    co: 'Me. Rev. Stat. tit. 25 § 2468 — CO detectors required for dwellings being sold or constructed, rental units, hotels/inns, and school-affiliated dorms.' },
+  MI: { name: 'Michigan', code: '2021 IFGC + 2021 IMC (eff. Feb 2024)', bookmark: 'up.codes/codes/michigan', bookmarkUrl: 'https://up.codes/codes/michigan',
+    co: 'Mich. Comp. Laws § 125.1504f — CO device required near bedrooms in newly constructed/renovated dwellings. § 125.1504d covers new transient lodging (hotels/motels/boarding).' },
+  NH: { name: 'New Hampshire', code: 'NFPA 54 (2021) via NH Fire Code (Saf-FMO 300)', bookmark: 'nfpa.org free access — NFPA 54', bookmarkUrl: 'https://www.nfpa.org/for-professionals/codes-and-standards/list-of-codes-and-standards/free-access',
+    co: 'N.H. Rev. Stat. § 153:10-a — CO detection required in multi-unit/rental dwellings with an attached garage or combustion appliance, and in new or substantially renovated single-family dwellings with the same.' },
+  NJ: { name: 'New Jersey', code: '2021 IFGC (NJ UCC fuel gas subcode)', bookmark: 'up.codes/codes/new_jersey', bookmarkUrl: 'https://up.codes/codes/new_jersey',
+    co: 'N.J. Stat. § 52:27D-133.3 to .5 — CO detectors required in 1–2 family homes at initial occupancy or change of occupancy. Separate provisions cover hotels/multiple dwellings (§55:13A-7.17) and rooming/boarding houses (§55:13B-6.1).' },
+  NY: { name: 'New York', code: '2020 NY Fuel Gas Code (based on IFGC 2018)', bookmark: 'dos.ny.gov — free full PDF of the current Fuel Gas Code of NY State', bookmarkUrl: 'https://dos.ny.gov/system/files/documents/2025/07/2025fgcnys_noa_2025-07-24.pdf',
+    co: 'N.Y. Exec. Law § 378 — CO detector required in 1–2 family dwellings, condos/co-ops, and multiple dwellings constructed or offered for sale, where the unit has combustion appliances/systems or an attached garage.' },
+  OH: { name: 'Ohio', code: '2021 Ohio Fuel Gas Code (IFGC 2021 base) + 2024 OH Mech. Code', bookmark: 'up.codes/viewer/ohio/ifgc-2021', bookmarkUrl: 'https://up.codes/viewer/ohio/ifgc-2021',
+    co: 'No standalone Ohio CO-alarm statute found in the NCSL compilation — Ohio\u2019s CO alarm requirement runs through its adoption of the International Residential Code (new construction). Check local jurisdiction for anything beyond that.' },
+  PA: { name: 'Pennsylvania', code: '2021 IFGC + 2021 IMC (via PA UCC)', bookmark: 'up.codes/viewer/pennsylvania/ifgc-2021', bookmarkUrl: 'https://up.codes/viewer/pennsylvania/ifgc-2021',
+    co: '35 P.S. § 7225 — CO alarms required in multi-family rental dwellings with a fossil-fuel heater/appliance, fireplace, or attached garage. § 7243 separately covers care facilities.' },
+  VA: { name: 'Virginia', code: '2021 Virginia Fuel Gas Code (IFGC 2021, amended, eff. Jan 18 2024)', bookmark: 'up.codes/viewer/virginia/ifgc-2021', bookmarkUrl: 'https://up.codes/viewer/virginia/ifgc-2021',
+    co: 'Va. Code § 27-94 et seq. / § 36-97 et seq. — statewide standard requiring smoke + CO alarms in rental properties, with annual landlord certification. § 22.1-289.058 separately covers pre-2015 child day-care buildings.' },
+  VT: { name: 'Vermont', code: 'NFPA 54 (2021) via VT Fire & Building Safety Code', bookmark: 'nfpa.org free access — NFPA 54', bookmarkUrl: 'https://www.nfpa.org/for-professionals/codes-and-standards/list-of-codes-and-standards/free-access',
+    co: 'Vt. Stat. tit. 9 § 2881-2883 — CO detector required near bedrooms in newly constructed single-family dwellings. Tit. 20 § 2729 separately covers condos/multi-unit/hotel-type buildings.' },
+  WI: { name: 'Wisconsin', code: '2021 IFGC (SPS 365, WI amendments) + 2021 IMC', bookmark: 'up.codes/viewer/wisconsin/ifgc-2015', bookmarkUrl: 'https://up.codes/viewer/wisconsin/ifgc-2015',
+    co: 'Wis. Stat. § 101.647 — owner of a 1-2 family dwelling with an attached garage, fireplace, or fuel-burning appliance must install a CO detector on each floor and in the basement. § 101.149 separately covers other residential/public sleeping buildings.' },
+};
+const STATE_NAME_TO_KEY = Object.fromEntries(Object.entries(STATE_REGS).map(([k,v]) => [v.name.toLowerCase(), k]));
+const STATE_ABBR = Object.keys(STATE_REGS);
+
+const CHIPS = [
+  { label: 'All', match: () => true },
+  { label: 'Clamshell', match: e => e.type === 'clamshell' },
+  { label: 'Serpentine', match: e => e.type === 'serpentine' },
+  { label: 'Tubular', match: e => e.type === 'tubular' },
+  { label: 'Venting & Draft', match: e => e.type === 'venting' },
+  { label: 'ID by Generation', match: e => e.type === 'generation' },
+  { label: 'Pending Only', match: e => e.status === 'pending' },
+];
+let activeChip = 0;
+
+CHIPS.forEach((c, i) => {
+  const btn = document.createElement('button');
+  btn.className = 'chip' + (i === 0 ? ' active' : '');
+  btn.textContent = c.label;
+  btn.onclick = () => {
+    activeChip = i;
+    document.querySelectorAll('.chip').forEach((el, idx) => el.classList.toggle('active', idx === i));
+    render();
+  };
+  chipRow.appendChild(btn);
+});
+
+const searchInput = document.getElementById('searchInput');
+searchInput.addEventListener('input', render);
+
+function matchesSearch(entry, q) {
+  if (!q) return true;
+  const hay = [entry.brand, entry.model, entry.type, entry.generation, entry.pointer, ...(entry.symptoms || [])]
+    .join(' ').toLowerCase();
+  return q.toLowerCase().split(/\s+/).filter(Boolean).every(term => hay.includes(term));
+}
+
+function render() {
+  const q = searchInput.value.trim();
+  const chip = CHIPS[activeChip];
+  const filtered = ENTRIES.filter(e => chip.match(e) && matchesSearch(e, q));
+
+  document.getElementById('resultCount').textContent = filtered.length;
+  document.getElementById('filterLabel').textContent = chip.label;
+
+  const results = document.getElementById('results');
+  const empty = document.getElementById('emptyState');
+
+  if (filtered.length === 0) {
+    results.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  results.innerHTML = filtered.map(e => `
+    <div class="card">
+      <div class="card-top">
+        <div class="icon-box">${ICONS[e.type] || ICONS.clamshell}</div>
+        <div class="card-head">
+          <p class="card-title">${escapeHtml(e.brand)} &mdash; ${escapeHtml(e.model)}</p>
+          <div class="card-meta">
+            <span>${escapeHtml(e.type)}</span>
+            <span>&middot;</span>
+            <span>${escapeHtml(e.generation)}</span>
+          </div>
+        </div>
+      </div>
+      <p class="pointer">${escapeHtml(e.pointer)}</p>
+      <div class="tags">${(e.symptoms || []).map(s => `<span class="tag">${escapeHtml(s)}</span>`).join('')}</div>
+      <div class="card-foot">
+        <span class="source-badge ${e.status === 'cleared' ? 'cleared' : 'pending'}">
+          ${e.status === 'cleared' ? '&#10003; SILA-OWNED CONTENT' : '&#9679; PENDING HEX SIGN-OFF'}
+        </span>
+        <span class="page-ref">${escapeHtml(e.page)}</span>
+      </div>
+    </div>
+  `).join('');
+
+  renderManualIndex(q);
+}
+
+function renderManualIndex(q) {
+  const filtered = MANUAL_INDEX.filter(row => !q || row.join(' ').toLowerCase().split(/\s+/).length && row.join(' ').toLowerCase().includes(q.toLowerCase()));
+  const filteredSmart = MANUAL_INDEX.filter(row => {
+    if (!q) return true;
+    const hay = row.join(' ').toLowerCase();
+    return q.toLowerCase().split(/\s+/).filter(Boolean).every(t => hay.includes(t));
+  });
+  document.getElementById('manualResultCount').textContent = filteredSmart.length;
+  const container = document.getElementById('manualResults');
+  const empty = document.getElementById('manualEmptyState');
+  if (!filteredSmart.length) { container.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  container.innerHTML = filteredSmart.map(([pages, title, model, serial, note]) => `
+    <div class="card">
+      <p class="card-title">${escapeHtml(title)}</p>
+      <div class="card-meta"><span>pp. ${escapeHtml(pages)}</span>${model && model!=='—' ? `<span>Model: ${escapeHtml(model)}</span>`:''}${serial && serial!=='—' ? `<span>Serial: ${escapeHtml(serial)}</span>`:''}</div>
+      <p class="pointer">${escapeHtml(note)}</p>
+    </div>`).join('');
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+render();
+
+/* --- Plate reader wiring --- */
+(function () {
+  const panel = document.getElementById('platePanel');
+  const toggle = document.getElementById('plateToggle');
+  const photoBtn = document.getElementById('photoBtn');
+  const photoInput = document.getElementById('photoInput');
+  const photoNote = document.getElementById('photoNote');
+  const manualBtn = document.getElementById('manualBtn');
+  const manualFields = document.getElementById('manualFields');
+  const brandSelect = document.getElementById('brandSelect');
+  const modelField = document.getElementById('modelField');
+  const serialField = document.getElementById('serialField');
+  const lookupBtn = document.getElementById('lookupBtn');
+  const statusEl = document.getElementById('plateStatus');
+  const resultEl = document.getElementById('plateResult');
+
+  // Populate brand dropdown from known decoders + legends.
+  const BRAND_OPTIONS = [
+    ['amana','Amana'], ['armstrong','Armstrong / Ducane / AirEase'], ['bard','Bard'],
+    ['carrier','Carrier / Bryant / Payne'], ['goodman','Goodman'], ['icp','Tempstar / Heil / Comfortmaker / Arcoaire'],
+    ['lennox','Lennox'], ['rheem','Rheem / Ruud'], ['trane','Trane / American Standard'], ['york','York / Luxaire'],
+  ];
+  BRAND_OPTIONS.forEach(([val, label]) => {
+    const o = document.createElement('option');
+    o.value = val; o.textContent = label;
+    brandSelect.appendChild(o);
+  });
+
+  toggle.addEventListener('click', () => panel.classList.toggle('open'));
+  manualBtn.addEventListener('click', () => {
+    manualFields.style.display = 'grid';
+    statusEl.textContent = '';
+  });
+
+  // Photo capture works on any modern mobile browser via the file input's
+  // capture attribute — no capability check needed like the Claude-hosted version.
+  photoBtn.style.display = 'block';
+  photoNote.style.display = 'block';
+
+  photoBtn.addEventListener('click', () => photoInput.click());
+  photoInput.addEventListener('change', async () => {
+    const file = photoInput.files?.[0];
+    if (!file) return;
+    resultEl.style.display = 'none';
+    statusEl.innerHTML = '<p class="status-msg">Reading the plate&hellip;</p>';
+    try {
+      const b64 = await fileToBase64(file);
+      const result = await askClaude(
+        'This is a photo of an HVAC furnace data plate / nameplate. Read the brand (manufacturer name), the model number, and the serial number exactly as printed. If a field is not clearly legible, use null for it rather than guessing. Reply with only JSON: {"brand": string|null, "model": string|null, "serial": string|null}',
+        { images: [{ data: b64, media_type: file.type || 'image/jpeg' }], max_tokens: 300 }
+      );
+      const data = extractJson(result.text);
+      statusEl.textContent = '';
+      if (!data || (!data.brand && !data.model && !data.serial)) {
+        statusEl.innerHTML = '<p class="status-msg err">Couldn\'t read anything confident off that photo — try better lighting/angle, or type it in instead.</p>';
+        return;
+      }
+      modelField.value = data.model || '';
+      serialField.value = data.serial || '';
+      const brandKey = normalizeBrandKey(data.brand);
+      if (brandKey) brandSelect.value = brandKey;
+      manualFields.style.display = 'grid';
+      runLookup({ brandLabelFallback: data.brand });
+    } catch (e) {
+      const msgs = {
+        wrong_passcode: 'That passcode wasn\u2019t right — try again.',
+        network: 'Couldn\u2019t reach the server — check your connection and try again.',
+        server_error: 'Something went wrong on the server — try again in a moment, or type the plate in instead.',
+      };
+      statusEl.innerHTML = `<p class="status-msg err">${msgs[e.code] || 'Couldn\'t read that photo — try again, or type the plate in instead.'}</p>`;
+    }
+  });
+
+  lookupBtn.addEventListener('click', () => runLookup({}));
+
+  function runLookup({ brandLabelFallback } = {}) {
+    const brandKey = brandSelect.value || normalizeBrandKey(brandLabelFallback);
+    const model = modelField.value.trim();
+    const serial = serialField.value.trim();
+    resultEl.style.display = 'block';
+
+    let html = '';
+
+    // Serial → age
+    const decoded = brandKey ? decodeSerialForBrand(brandKey, serial) : null;
+    if (decoded) {
+      const dateStr = [monthName(decoded.month), decoded.year].filter(Boolean).join(' ') +
+        (decoded.week ? ` (week ${decoded.week})` : '');
+      html += `<div class="result-row">
+        <span class="conf-badge ${decoded.confidence}">${decoded.confidence.toUpperCase()} CONFIDENCE</span>
+        <strong>${escapeHtml(dateStr)}</strong>
+      </div>
+      <p class="result-note">${escapeHtml(decoded.note)}${decoded.link ? ` <a href="${decoded.link}" target="_blank" rel="noopener">Manufacturer\u2019s own nomenclature guide &rarr;</a>` : ''}</p>`;
+    } else if (serial) {
+      html += `<p class="result-note">Couldn\u2019t confidently estimate an age from that serial number${brandKey ? ' for this brand' : ' — select a brand above'} — formats vary too much by era to guess safely here. Worth checking the brand\u2019s own official serial lookup if one exists.</p>`;
+    }
+
+    // Model legend reference
+    if (brandKey && MODEL_LEGEND[brandKey]) {
+      const leg = MODEL_LEGEND[brandKey];
+      html += `<div class="legend-wrap"><table class="legend-table">
+        <caption style="text-align:left;color:var(--ink-dim);font-size:12px;margin-bottom:4px;caption-side:top;">
+          ${escapeHtml(leg.label)} model-number legend &mdash; example: <span style="font-family:'IBM Plex Mono',monospace;">${escapeHtml(leg.example)}</span>
+        </caption>
+        <thead><tr>${leg.cols.map(c => `<th>${escapeHtml(c)}</th>`).join('')}</tr></thead>
+        <tbody><tr>${leg.vals.map(v => `<td>${escapeHtml(v)}</td>`).join('')}</tr></tbody>
+      </table></div>`;
+    }
+
+    resultEl.innerHTML = html || '<p class="result-note">Enter at least a brand to see what we know.</p>';
+
+    // Auto-filter the main lookup below to this brand
+    if (brandKey) {
+      const label = BRAND_OPTIONS.find(([v]) => v === brandKey)?.[1] || brandKey;
+      searchInput.value = label.split(' / ')[0];
+      activeChip = 0;
+      document.querySelectorAll('.chip').forEach((el, idx) => el.classList.toggle('active', idx === 0));
+      render();
+      document.getElementById('resultCount').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+})();
+
+/* --- Codes & Regs by location wiring --- */
+(function () {
+  const panel = document.getElementById('regsPanel');
+  const toggle = document.getElementById('regsToggle');
+  const locationField = document.getElementById('locationField');
+  const lookupBtn = document.getElementById('regsLookupBtn');
+  const statusEl = document.getElementById('regsStatus');
+  const resultEl = document.getElementById('regsResult');
+
+  toggle.addEventListener('click', () => panel.classList.toggle('open'));
+
+  async function resolveState(text) {
+    try {
+      const result = await askClaude(
+        `A home-services technician gave this location: "${text}". ` +
+        `Identify which single US state this is in. If the place name could plausibly be in more than one US state and you can't tell which from what's given, say so instead of guessing. ` +
+        `Reply with only JSON: {"state": string|null (full state name, or null if you can't determine one), "ambiguous": boolean, "note": string (empty string if nothing to add)}`,
+        { max_tokens: 200 }
+      );
+      const data = extractJson(result.text);
+      return data || { error: 'server_error' };
+    } catch (e) {
+      return { error: e.code };
+    }
+  }
+
+  lookupBtn.addEventListener('click', async () => {
+    const text = locationField.value.trim();
+    resultEl.style.display = 'none';
+    if (!text) { statusEl.innerHTML = '<p class="status-msg err">Enter a town, city, or address first.</p>'; return; }
+    statusEl.innerHTML = '<p class="status-msg">Working out which state that\u2019s in&hellip;</p>';
+
+    const resolved = await resolveState(text);
+    statusEl.textContent = '';
+
+    if (resolved.error) {
+      const msgs = {
+        wrong_passcode: 'That passcode wasn\u2019t right — try again.',
+        network: 'Couldn\u2019t reach the server — check your connection and try again.',
+        server_error: 'Something went wrong on the server — try again in a moment.',
+      };
+      statusEl.innerHTML = `<p class="status-msg err">${msgs[resolved.error] || 'Couldn\u2019t resolve that location — try naming the state directly, e.g. "Worcester, MA."'}</p>`;
+      return;
+    }
+    if (!resolved.state || resolved.ambiguous) {
+      statusEl.innerHTML = `<p class="status-msg err">${escapeHtml(resolved.note || 'Couldn\u2019t confidently place that in one state — try adding the state abbreviation, e.g. "Springfield, MA."')}</p>`;
+      return;
+    }
+
+    const key = STATE_NAME_TO_KEY[resolved.state.toLowerCase()];
+    resultEl.style.display = 'block';
+    if (!key) {
+      resultEl.innerHTML = `<p class="result-note">That looks like <strong>${escapeHtml(resolved.state)}</strong> — we don\u2019t have a built reference for this state yet (this tool currently covers Sila\u2019s operating states). Flag it to L&amp;D if that needs adding.</p>`;
+      return;
+    }
+    const reg = STATE_REGS[key];
+    resultEl.innerHTML = `
+      <div class="result-row"><strong>${escapeHtml(reg.name)}</strong> <span class="conf-badge low">STATE LAYER ONLY</span></div>
+      <p class="result-note"><strong style="color:var(--ink);">Adopted fuel gas code:</strong> ${escapeHtml(reg.code)} &mdash; <a href="${reg.bookmarkUrl}" target="_blank" rel="noopener" style="font-family:'IBM Plex Mono',monospace;">${escapeHtml(reg.bookmark)} &rarr;</a></p>
+      <p class="result-note"><strong style="color:var(--ink);">State CO alarm law:</strong> ${escapeHtml(reg.co)}</p>
+      ${reg.localFlag ? '<p class="result-note" style="color:var(--amber);">This state has significant home-rule variation — local/municipal amendments can add requirements beyond the state layer. Check with the local building department.</p>' : ''}
+      <p class="result-note"><strong style="color:var(--ink);">Showing this to the homeowner:</strong> tap the link above and pull up the real, current, official page live on your phone or tablet \u2014 that's the "third-party reference" the deck talks about. Don't read from a printed copy or a paraphrase; the free official viewer is more credible to a homeowner than anything Sila hands you anyway, and it's always the current edition.</p>
+      <p class="result-note">Utility-specific rules (right-of-entry, shutoff/reconnect procedure, notification duties) are set contract-by-contract per gas utility and aren\u2019t something this tool can generalize \u2014 check with dispatch/your utility liaison for those.</p>
+      <p class="result-note" style="opacity:0.8;">Reference material only, sourced from the National Conference of State Legislatures (updated Sept 2025) and public code-adoption records \u2014 not a legal compliance determination. Verify anything safety-critical, and route through Sila compliance/legal before this becomes operational guidance.</p>
+    `;
+  });
+})();
+
+/* --- Ask HEX wiring --- */
+(function () {
+  const panel = document.getElementById('askPanel');
+  const toggle = document.getElementById('askToggle');
+  const input = document.getElementById('askInput');
+  const btn = document.getElementById('askBtn');
+  const statusEl = document.getElementById('askStatus');
+  const resultEl = document.getElementById('askResult');
+
+  toggle.addEventListener('click', () => panel.classList.toggle('open'));
+
+  function buildContext() {
+    // Only reference data already cleared for Sila use — never the manual's own text.
+    const brandLines = ENTRIES.map(e => `- ${e.brand} ${e.model} (${e.type}, ${e.generation}): ${e.pointer} Symptoms: ${(e.symptoms||[]).join(', ')}`).join('\n');
+    const stateLines = Object.entries(STATE_REGS).map(([k,r]) => `- ${r.name}: code ${r.code}; CO law: ${r.co}`).join('\n');
+    const manualLines = MANUAL_INDEX.map(([pages,title,model,serial,note]) => `- pp.${pages} ${title} (${model}, ${serial}): ${note}`).join('\n');
+    const recallLines = MANUAL_RECALLS.map(([b,y,n]) => `- ${b} (${y}): ${n}`).join('\n');
+    return [
+      'BRAND/CHAMBER REFERENCE ENTRIES:\n' + brandLines,
+      'STATE CODES & CO ALARM LAWS:\n' + stateLines,
+      'MANUAL PHOTO INDEX (pointers only, not the manual\'s own text):\n' + manualLines,
+      'CONFIRMED RECALLS/BULLETINS:\n' + recallLines,
+      'RECURRING SAFETY PRINCIPLES:\n' + MANUAL_PRINCIPLES.join('\n'),
+      'NEW FIELD TECHNIQUES:\n' + MANUAL_TECHNIQUES.join('\n'),
+    ].join('\n\n');
+  }
+
+  async function ask() {
+    const q = input.value.trim();
+    if (!q) { statusEl.innerHTML = '<p class="status-msg err">Type a question first.</p>'; return; }
+    resultEl.style.display = 'none';
+    statusEl.innerHTML = '<p class="status-msg">Thinking&hellip;</p>';
+    const prompt =
+      'You are a reference assistant for Sila Services HVAC technicians, answering questions about heat exchanger inspection. ' +
+      'Answer ONLY using the reference data below \u2014 do not invent facts, and do not claim to know the Heat Exchanger Experts manual\'s actual text or images beyond what\'s summarized here. ' +
+      'If the answer isn\'t in this reference data, say so plainly and suggest checking the physical manual page (cited in the index) or asking L&D \u2014 don\'t guess. ' +
+      'Keep answers short and practical, field-ready.\n\n' +
+      buildContext() +
+      '\n\nTECHNICIAN\'S QUESTION: ' + q;
+    try {
+      const result = await askClaude(prompt, { max_tokens: 600 });
+      statusEl.textContent = '';
+      resultEl.style.display = 'block';
+      resultEl.innerHTML = `<p class="result-note" style="white-space:pre-wrap;">${escapeHtml(result.text)}</p>`;
+    } catch (e) {
+      const msgs = {
+        wrong_passcode: 'That passcode wasn\u2019t right — try again.',
+        network: 'Couldn\u2019t reach the server — check your connection and try again.',
+        server_error: 'Something went wrong on the server — try again in a moment.',
+      };
+      statusEl.innerHTML = `<p class="status-msg err">${msgs[e.code] || 'Couldn\u2019t get an answer — try again.'}</p>`;
+    }
+  }
+  btn.addEventListener('click', ask);
+  input.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') ask(); });
+
+  renderManualIndex('');
+})();
+</script>
+</body>
+</html>
