@@ -144,23 +144,29 @@
     color: var(--ink);
   }
 
-  /* Manual index cards: text-first, image as supporting evidence */
-  .manual-card-v2 { display: block; }
-  .manual-card-foot {
-    display: flex; align-items: center; gap: 10px; margin-top: 10px;
-    padding-top: 10px; border-top: 1px dashed var(--line);
-  }
-  .manual-thumb-sm {
-    flex: 0 0 56px; width: 56px; height: 56px; object-fit: cover;
-    border-radius: 6px; border: 1px solid var(--line); cursor: zoom-in;
+  /* Manual index cards: real-sized photo alongside the text, not a cropped icon */
+  .manual-card-v3 { display: flex; gap: 14px; align-items: flex-start; }
+  .mc3-imgcol { flex: 0 0 128px; display: flex; flex-direction: column; gap: 8px; }
+  .mc3-thumb {
+    width: 128px; height: 171px; /* matches the 3:4 portrait photos — no awkward cropping */
+    object-fit: cover; object-position: top center;
+    border-radius: 8px; border: 1px solid var(--line); cursor: zoom-in;
     background: var(--navy-2);
   }
+  .mc3-body { flex: 1 1 auto; min-width: 0; }
   .view-page-btn {
-    background: transparent; border: 1px solid var(--line); color: var(--orange-2);
-    font-size: 12.5px; padding: 7px 12px; border-radius: 999px; cursor: pointer;
-    font-family: 'IBM Plex Mono', monospace;
+    width: 100%; background: transparent; border: 1px solid var(--line); color: var(--orange-2);
+    font-size: 11.5px; padding: 7px 4px; border-radius: 8px; cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace; text-align: center;
   }
   .view-page-btn:hover { border-color: var(--orange); }
+
+  @media (max-width: 480px) {
+    .manual-card-v3 { gap: 10px; }
+    .mc3-imgcol { flex-basis: 92px; }
+    .mc3-thumb { width: 92px; height: 123px; }
+    .view-page-btn { font-size: 10px; padding: 6px 2px; }
+  }
 
   /* Zoomable original-page viewer */
   .manual-img-overlay {
@@ -189,13 +195,14 @@
   }
 
   .plate-match-photo {
-    display: flex; gap: 12px; align-items: center; margin-top: 12px;
+    display: flex; gap: 12px; align-items: flex-start; margin-top: 12px;
     padding: 10px; background: var(--navy-2); border: 1px solid var(--line); border-radius: 10px;
   }
   .plate-match-photo img {
-    flex: 0 0 84px; width: 84px; height: 84px; object-fit: cover; border-radius: 6px; cursor: zoom-in;
+    flex: 0 0 96px; width: 96px; height: 128px; object-fit: cover; object-position: top center;
+    border-radius: 6px; cursor: zoom-in; border: 1px solid var(--line);
   }
-  .plate-match-photo .pmp-text { flex: 1 1 auto; font-size: 13px; color: var(--ink); }
+  .plate-match-photo .pmp-text { flex: 1 1 auto; font-size: 13px; color: var(--ink); padding-top: 2px; }
   .plate-match-photo .pmp-text strong { color: var(--orange-2); display: block; margin-bottom: 2px; font-size: 12px; }
 
   .no-match-flag {
@@ -1143,13 +1150,15 @@ function manualCardHtml([pages, title, brand, model, serial, summary, image]) {
   if (serial) metaBits.push(`<span>Serial: ${escapeHtml(serial)}</span>`);
   const safeTitle = escapeHtml(title).replace(/'/g, "\\'");
   return `
-    <div class="card manual-card-v2">
-      <p class="card-title">${escapeHtml(title)}</p>
-      <div class="card-meta">${metaBits.join('')}<span>pp. ${escapeHtml(pages)}</span></div>
-      <p class="pointer">${escapeHtml(summary)}</p>
-      <div class="manual-card-foot">
-        <img class="manual-thumb-sm" src="${image}" alt="${escapeHtml(title)}" loading="lazy" onclick="openManualImage('${image}','${safeTitle}')">
+    <div class="card manual-card-v3">
+      <div class="mc3-imgcol">
+        <img class="mc3-thumb" src="${image}" alt="${escapeHtml(title)}" loading="lazy" onclick="openManualImage('${image}','${safeTitle}')">
         <button class="view-page-btn" onclick="openManualImage('${image}','${safeTitle}')">View original page &#8599;</button>
+      </div>
+      <div class="mc3-body">
+        <p class="card-title">${escapeHtml(title)}</p>
+        <div class="card-meta">${metaBits.join('')}<span>pp. ${escapeHtml(pages)}</span></div>
+        <p class="pointer">${escapeHtml(summary)}</p>
       </div>
     </div>`;
 }
