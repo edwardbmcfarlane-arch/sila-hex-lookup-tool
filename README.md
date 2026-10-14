@@ -61,6 +61,24 @@ up from what's built here. Two easy things worth doing regardless:
   unexpectedly.
 - **Rotate `SITE_PASSCODE`** if you ever suspect it's leaked outside your team, and redeploy.
 
+## Real manual photos — now included, with permission
+
+Russell at Heat Exchanger Experts gave the OK to use the manual's own photos in this
+internal field tool. `images/manual/` contains 89 resized photos (full-resolution
+originals compressed to ~200KB each for fast loading on a phone), each one verified
+page-by-page against the real files and named by page number
+(`036-037_goodman-condensation-mis-level.jpg`, etc.).
+
+Two places in the tool now show these:
+- **The manual index panel** — each matching entry shows a thumbnail; tap it to view full-size.
+- **The data-plate reader** — after it reads a brand/model off a nameplate, it checks for
+  a matching real manual page and shows it alongside the written info.
+
+If you ever want to add more photos (new findings, updated editions), drop the resized
+JPEGs into `images/manual/` and add a matching row to the `MANUAL_INDEX` array near the
+top of `index.html`'s `<script>` block — the format is
+`["page range", "title", "note", "", "images/manual/filename.jpg"]`.
+
 ## What still isn't reproduced here
 
 The manual index panel, recall list, and reference data all point to pages, brands, and
