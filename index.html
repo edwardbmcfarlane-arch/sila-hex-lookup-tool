@@ -144,30 +144,78 @@
     color: var(--ink);
   }
 
-  .manual-card { display: flex; gap: 12px; align-items: flex-start; }
-  .manual-thumb {
-    flex: 0 0 96px; width: 96px; height: 96px; object-fit: cover;
-    border-radius: 8px; border: 1px solid var(--line); cursor: pointer;
+  /* Manual index cards: text-first, image as supporting evidence */
+  .manual-card-v2 { display: block; }
+  .manual-card-foot {
+    display: flex; align-items: center; gap: 10px; margin-top: 10px;
+    padding-top: 10px; border-top: 1px dashed var(--line);
+  }
+  .manual-thumb-sm {
+    flex: 0 0 56px; width: 56px; height: 56px; object-fit: cover;
+    border-radius: 6px; border: 1px solid var(--line); cursor: zoom-in;
     background: var(--navy-2);
   }
-  .manual-card-body { flex: 1 1 auto; min-width: 0; }
+  .view-page-btn {
+    background: transparent; border: 1px solid var(--line); color: var(--orange-2);
+    font-size: 12.5px; padding: 7px 12px; border-radius: 999px; cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .view-page-btn:hover { border-color: var(--orange); }
+
+  /* Zoomable original-page viewer */
   .manual-img-overlay {
     display: none; position: fixed; inset: 0; z-index: 999;
-    background: rgba(4,20,32,0.92); align-items: center; justify-content: center;
-    flex-direction: column; padding: 24px; cursor: zoom-out;
+    background: rgba(4,20,32,0.97); flex-direction: column;
   }
-  .manual-img-overlay img { max-width: 100%; max-height: 82vh; border-radius: 6px; object-fit: contain; }
-  .manual-img-overlay p { color: var(--ink); margin-top: 12px; font-size: 14px; text-align: center; max-width: 70ch; }
+  .ziv-topbar {
+    flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px; padding-top: calc(14px + env(safe-area-inset-top, 0px));
+    border-bottom: 1px solid var(--line);
+  }
+  .ziv-caption { color: var(--ink); font-size: 13.5px; padding-right: 12px; }
+  .ziv-close {
+    flex: 0 0 auto; background: transparent; border: none; color: var(--ink);
+    font-size: 28px; line-height: 1; cursor: pointer; padding: 0 6px;
+  }
+  .ziv-stage {
+    flex: 1 1 auto; overflow: hidden; position: relative;
+    display: flex; align-items: center; justify-content: center;
+    touch-action: none; cursor: grab;
+  }
+  .ziv-img { max-width: 100%; max-height: 100%; object-fit: contain; transform-origin: center center; user-select: none; }
+  .ziv-hint {
+    flex: 0 0 auto; text-align: center; color: var(--ink-dim); font-size: 12px;
+    padding: 10px 16px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  }
 
   .plate-match-photo {
     display: flex; gap: 12px; align-items: center; margin-top: 12px;
     padding: 10px; background: var(--navy-2); border: 1px solid var(--line); border-radius: 10px;
   }
   .plate-match-photo img {
-    flex: 0 0 84px; width: 84px; height: 84px; object-fit: cover; border-radius: 6px; cursor: pointer;
+    flex: 0 0 84px; width: 84px; height: 84px; object-fit: cover; border-radius: 6px; cursor: zoom-in;
   }
   .plate-match-photo .pmp-text { flex: 1 1 auto; font-size: 13px; color: var(--ink); }
   .plate-match-photo .pmp-text strong { color: var(--orange-2); display: block; margin-bottom: 2px; font-size: 12px; }
+
+  .no-match-flag {
+    margin-top: 12px; padding: 12px; background: var(--navy-2);
+    border: 1px dashed var(--line); border-radius: 10px; font-size: 13px; color: var(--ink-dim);
+  }
+  .no-match-flag button {
+    margin-top: 8px; background: var(--orange); color: #1a1a1a; border: none;
+    font-weight: 600; font-size: 13px; padding: 8px 14px; border-radius: 8px; cursor: pointer;
+  }
+  .no-match-flag.flagged { color: var(--green, #4caf7d); border-color: var(--green, #4caf7d); }
+
+  /* Admin panel */
+  .admin-link { font-size: 11px; color: var(--ink-dim); text-decoration: underline; cursor: pointer; background: none; border: none; padding: 0; }
+  .admin-flag-card { display: flex; gap: 12px; }
+  .admin-flag-card img { flex: 0 0 72px; width: 72px; height: 72px; object-fit: cover; border-radius: 6px; cursor: zoom-in; border: 1px solid var(--line); }
+  .admin-flag-card .afc-body { flex: 1 1 auto; font-size: 13px; }
+  .admin-flag-card .afc-meta { color: var(--ink-dim); font-size: 11.5px; margin-top: 2px; }
+  .admin-flag-card button { margin-top: 8px; background: transparent; border: 1px solid var(--line); color: var(--ink); font-size: 12px; padding: 5px 10px; border-radius: 6px; cursor: pointer; }
+  .admin-flag-card button:hover { border-color: var(--orange); color: var(--orange-2); }
 
   .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
   .tag {
@@ -427,6 +475,24 @@
   <div id="manualResults"></div>
   <div id="manualEmptyState" class="empty" style="display:none;">No matches &mdash; try a brand name or a word like &ldquo;recall&rdquo; or &ldquo;drum.&rdquo;</div>
 
+  <div style="text-align:center; margin-top:18px;">
+    <button class="admin-link" id="adminLinkBtn" type="button">Admin: review flagged plates</button>
+  </div>
+  <div class="plate-panel" id="adminPanel" style="display:none;">
+    <div class="plate-head" id="adminToggle">
+      <div>
+        <h2>Flagged Data Plates</h2>
+        <p class="plate-sub">Plates techs scanned that didn't match anything in the index. Review, then add to <code>MANUAL_INDEX</code> and dismiss.</p>
+      </div>
+      <span class="caret">&#9656;</span>
+    </div>
+    <div class="plate-body" id="adminBody">
+      <div id="adminStatus"></div>
+      <div id="adminFlagsList"></div>
+      <button class="btn" id="adminRefreshBtn" type="button" style="margin-top:10px;">Refresh list</button>
+    </div>
+  </div>
+
   <footer class="notice">
     <strong>What this is:</strong> a working prototype seeded with entries already cleared for Sila use &mdash; the manufacturer notes already licensed into the HEX trainer deck, plus the venting/draft and efficiency-generation content from the live class that isn't written down anywhere else yet. Entries marked <span style="color:var(--amber)">PENDING</span> are placeholders waiting on the 2026 manual's page images and Heat Exchanger Experts' sign-off before the real page content goes in. Nothing here reproduces the manual's text.
   </footer>
@@ -494,6 +560,51 @@ function fileToBase64(file) {
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+}
+
+// Shrinks an image file down to a small JPEG (base64, no data: prefix) for
+// cheap storage in a flagged-plate record — we don't need full resolution
+// just to recognize a furnace later.
+function downscaleImageToBase64(file, maxDim, quality) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = () => { img.src = String(reader.result); };
+    reader.onerror = reject;
+    img.onload = () => {
+      let { width, height } = img;
+      if (width > height && width > maxDim) { height = Math.round(height * maxDim / width); width = maxDim; }
+      else if (height > maxDim) { width = Math.round(width * maxDim / height); height = maxDim; }
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+      const dataUrl = canvas.toDataURL('image/jpeg', quality || 0.7);
+      resolve(dataUrl.split(',')[1] || '');
+    };
+    img.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// POST helper for the non-Claude functions (flag-plate, admin-flags) — same
+// passcode mechanism as askClaude, but a thinner payload shape.
+async function postToFunction(fnName, payload) {
+  const passcode = await ensurePasscode();
+  const resp = await fetch(`/.netlify/functions/${fnName}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...payload, passcode }),
+  });
+  if (resp.status === 401) {
+    localStorage.removeItem('hex_tool_passcode');
+    const err = new Error('wrong_passcode'); err.code = 'wrong_passcode'; throw err;
+  }
+  if (!resp.ok) {
+    let msg = 'server_error';
+    try { const j = await resp.json(); msg = j.error || msg; } catch (e2) {}
+    const err = new Error(msg); err.code = 'server_error'; throw err;
+  }
+  return resp.json();
 }
 
 const ICONS = {
@@ -592,95 +703,95 @@ const ENTRIES = [
 ];
 
 const MANUAL_INDEX = [
-["back matter","Program marketing page + QR code","—","","images/manual/zzz-backmatter_program-marketing-page-qr-code.jpg"],
-["copyright page / ToC","Copyright page + Table of Contents","—","","images/manual/aaa-toc_copyright-page-table-of-conten.jpg"],
-["i–ii","Preface / Introduction","—","","images/manual/00-i-00-ii_preface-introduction.jpg"],
-["iii–1","How Can a Heat Exchanger Fail? / Rules and Regs","—","","images/manual/00-iii-001_how-can-a-heat-exchanger-fail.jpg"],
-["2–3","Denver code excerpt / National Organizations AGA AHRI","—","","images/manual/002-003_denver-code-excerpt-national-o.jpg"],
-["4–5","Inspection Methods intro / chamber types + clamshell-brand list","—","","images/manual/004-005_inspection-methods-intro-chamb.jpg"],
-["6–7","Clamshell steps 1-7 (full detail)","—","","images/manual/006-007_clamshell-steps-1-7-full-detai.jpg"],
-["8–9","Clamshell steps 8-10 / Serpentine + Tubular intro","—","","images/manual/008-009_clamshell-steps-8-10-serpentin.jpg"],
-["10–11","CO Testing Procedure (IFGC 400/200ppm) / Combustion Analysis","—","","images/manual/010-011_co-testing-procedure-ifgc-4002.jpg"],
-["12–13","Gas Pressure procedure / Furnace Sizing checklist","—","","images/manual/012-013_gas-pressure-procedure-furnace.jpg"],
-["14–15","Clean and Safety Check (CPSC 400ppm) / Case Studies intro","—","","images/manual/014-015_clean-and-safety-check-cpsc-40.jpg"],
-["16–17","Reading clues (80% efficient) / Horizontal Armstrong steps 1-4","Armstrong Horizontal 80%","","images/manual/016-017_reading-clues-80-efficient-hor.jpg"],
-["18–19","Horizontal steps 5-12 / Horizontal Armstrong 1992","Armstrong Horizontal 1992","","images/manual/018-019_horizontal-steps-5-12-horizont.jpg"],
-["20–21","Horizontal Consolidated (30-brand recall) / Horizontal Ducane 80%","Ducane 80% Horizontal","","images/manual/020-021_horizontal-consolidated-30-bra.jpg"],
-["22–23","Horizontal Ducane (cont\'d) / Horizontal Fraser Johnston","—","","images/manual/022-023_horizontal-ducane-contd-horizo.jpg"],
-["24–25","Horizontal Lennox / Horizontal Premier (2 models) - NEW CONTENT not previously indexed","Lennox Horizontal: GS18Q3-75-5; Premier Horizontal (2 models, no model# shown)","","images/manual/024-025_horizontal-lennox-horizontal-p.jpg"],
-["26–27","Horizontal Rheem / AirPro 80%","AirPro 80%","","images/manual/026-027_horizontal-rheem-airpro-80.jpg"],
-["28–29","AirPro 80% clogged coil / Amana weld-seam thump cue","AirPro 80%: FG8D12520MU12A/WKMM056709; Amana: GH105DN3/AD92950077","","images/manual/028-029_airpro-80-clogged-coil-amana-w.jpg"],
-["32–33","Amana 90%+ tube-loosening story (cont\'d)","Amana 95%: AMH950905CXAB/1105754461","","images/manual/032-033_amana-90-tube-loosening-story.jpg"],
-["34–35","Amana 95% corrosion / Amana-Goodman-Daikin material comparison","Amana 95%: AMH9507038XAA/0610148599,1105754461; Goodman: GMS907038XA/0503091452","","images/manual/034-035_amana-95-corrosion-amana-goodm.jpg"],
-["36–37","Goodman condensation (mis-leveled) / borescope technique","Goodman: GMS90703BXA/0503091452","","images/manual/036-037_goodman-condensation-mis-level.jpg"],
-["38–39","American Standard weld-seam test / air baffle hot spots","American Standard: UGF-120E4,GUB-125-E5/H66D00158; AUD140C960J1/Z0B5WY120","","images/manual/038-039_american-standard-weld-seam-te.jpg"],
-["40–41","Arcoaire 1989 80% detailed inspection process (steps)","Arcoaire 1989 80%: GUA100A-016AIN/R893700449","","images/manual/040-041_arcoaire-1989-80-detailed-insp.jpg"],
-["42–43","Arcoaire clamshell backside / Arcoaire serpentine","Arcoaire serpentine: G01100A0128IN/L94I435441","","images/manual/042-043_arcoaire-clamshell-backside-ar.jpg"],
-["44–45","Arcoaire 1980s light/mirror technique / Arkla discontinued","Arcoaire 1980s: GUF75A008-N/000211300P28-0315; Arkla (recalled, CPSC brand)","","images/manual/044-045_arcoaire-1980s-lightmirror-tec.jpg"],
-["46–47","Armstrong faceplate crack / EG6B recall detail","Armstrong: G64-80D/147902; EG6F100DC16-3","","images/manual/046-047_armstrong-faceplate-crack-eg6b.jpg"],
-["48–49","Armstrong eyelet / Armstrong Clamshell declined-repair story","Armstrong: GCJ100D12-4A/8498D17667; EG6G150DC20-3/A20701FMA","","images/manual/048-049_armstrong-eyelet-armstrong-cla.jpg"],
-["50–51","Armstrong Ultra 80% eyelet missing (x2)","Armstrong Ultra 80%: GUJ150D-120-28/8496A12541; GCJ075D-14-3A/58497C21036 (1997)","","images/manual/050-051_armstrong-ultra-80-eyelet-miss.jpg"],
-["52–53","Armstrong Ultra 80% light-through-crack / Ultra II","Armstrong Ultra 80: EG6G150DCZ0-4A/8493E18129; Ultra II 1992: EG6E80DC16-8/A147018NA","","images/manual/052-053_armstrong-ultra-80-light-throu.jpg"],
-["54–55","Armstrong Ultra 90 (90% cracks at top, opposite of 80%)","Armstrong Ultra 90: GUK125D20-1A/8493112858","","images/manual/054-055_armstrong-ultra-90-90-cracks-a.jpg"],
-["56–57","Bard crack vs rust-line / Bryant dimpled-weld 7-step check","Bard: IH85D48C/0080585D84; Bryant Series SB-D: 125-393U/45S113179","","images/manual/056-057_bard-crack-vs-rust-line-bryant.jpg"],
-["58–59","Carrier/Bryant Super Saver (welded not eyelet) / Bryant","Super Saver: 58SS100-BC/5184C59096; Bryant: 395CAV02-4055/3889A19652","","images/manual/058-059_carrierbryant-super-saver-weld.jpg"],
-["60–61","Carrier/Bryant High-Efficient pre-2012 polypropylene liner bulletin","—","","images/manual/060-061_carrierbryant-high-efficient-p.jpg"],
-["62–63","Bulletin model list (Carrier/Bryant/Payne) / Carrier Plus 90 2013-current","Carrier Plus 90: 398AAW0-48080D/1287A06472","","images/manual/062-063_bulletin-model-list-carrierbry.jpg"],
-["64–65","Carrier/Bryant 2013-present upflow/downflow reversal; combustion pass + visual still mandatory","Carrier: 9125C36040S17A-A/2217A58343","","images/manual/064-065_carrierbryant-2013-present-upf.jpg"],
-["66–67","Carrier 90% (1993) corrosion / Carrier 90 Plus","Carrier 90 Plus: 398AAW0-48080D/1287A06472","","images/manual/066-067_carrier-90-1993-corrosion-carr.jpg"],
-["68–69","Take Pride motivation story / Carrier dimple weld cracks","Carrier: 58GP125-1/8A35439","","images/manual/068-069_take-pride-motivation-story-ca.jpg"],
-["70–71","Carrier dimple-weld inspection method / felt-crack technique","Carrier: 58PAV070-12/13F7A05946","","images/manual/070-071_carrier-dimple-weld-inspection.jpg"],
-["72–73","Carrier first 80% model (feel for crack) / Carrier Package Unit","Carrier: 397HAW-048120/4083C86029; Package Unit: 48TME007---501/0906G4045R","","images/manual/072-073_carrier-first-80-model-feel-fo.jpg"],
-["74–75","Carrier Package Unit (3 of 5 tubes cracked) / Coleman mobile home combustion air chute leak","—","","images/manual/074-075_carrier-package-unit-3-of-5-tu.jpg"],
-["76–77","Coleman UPG bulletin (named, Feb 2005) / Comfortmaker 90%","Coleman: DGAT075BOF/981179518; Comfortmaker: GNK07SNI4AZ/L9B2913664","","images/manual/076-077_coleman-upg-bulletin-named-feb.jpg"],
-["78–79","Cozy Wall Furnace (new furnace category) + Steel Sheeley training-ROI story","Cozy Wall Furnace: W355G/17190964","","images/manual/078-079_cozy-wall-furnace-new-furnace.jpg"],
-["80–81","Dornback Gravity (drum split, installer error)","Dornback Gravity: SG90NS/9901-0035","","images/manual/080-081_dornback-gravity-drum-split-in.jpg"],
-["84–85","Fedders (99pct back-narrow stat) + 5-image crack-consistency comparison","Fedders: CUG045N1D/KP347566; CUG105N0D,120N3D/LM627848,EG771277","","images/manual/084-085_fedders-99pct-back-narrow-stat.jpg"],
-["86–87","Fraser Johnston handyman patch story / Fraser Johnston 90%","Fraser Johnston: 120CJ/277814; Fraser Johnston 90%: PBNULD12N1008/EAYM002717","","images/manual/086-087_fraser-johnston-handyman-patch.jpg"],
-["88–89","General Electric Murphys Law quote / Goodman 90% tubular","GE: BLU166C94880/511903","","images/manual/088-089_general-electric-murphys-law-q.jpg"],
-["90–91","Goodman 95% corrosion / 75000ppm CO reading, Excel Energy shut off","Goodman: GMV9509Q5DX8B/0709003928; GMV9S0704CX8B/0907707849","","images/manual/090-091_goodman-95-corrosion-75000ppm.jpg"],
-["92–93","Steel Gravity furnace (smoke-candle test) / Heil serpentine eyelet","—","","images/manual/092-093_steel-gravity-furnace-smoke-ca.jpg"],
-["96–97","Heil 80% nox rods / Heil 90% (flipped upside down)","Heil 80%: H8MPN125J2081/A062444873(2006); Heil 90%: N9MP2125J2081/A0406490745(2004)","","images/manual/096-097_heil-80-nox-rods-heil-90-flipp.jpg"],
-["98–99","Heil 90% facial cracks / Holly (POTENTIAL quote)","Heil 90%: NUGKI25DK06867769445/L910677895(1991); Holly: 100-VF/630(40+yrs)","","images/manual/098-099_heil-90-facial-cracks-holly-po.jpg"],
-["100–101","ICP/Comfortmaker dual-criteria IFGC quote; 5-ton single-sided return error","Comfortmaker: N8MSN0902120A1/A104714273(Nov2010)","","images/manual/100-101_icpcomfortmaker-dual-criteria.jpg"],
-["102–103","ICP 90% (InterCity) brand family list / serpentine method, 300ppm catch story","ICP 90%: NTGM050EFA3/L992444373; NUGS1258HB2/L941954484","","images/manual/102-103_icp-90-intercity-brand-family.jpg"],
-["104–105","Intertherm drum-type (courtesy Bart Ferguson, Colorado Springs)","Intertherm: MIG8070A8W/MIG00080206","","images/manual/104-105_intertherm-drum-type-courtesy.jpg"],
-["106–107","Janitrol heat-cycle abuse / serpentine eyelet rattling cue","Janitrol: GMP100-3V/9305093644","","images/manual/106-107_janitrol-heat-cycle-abuse-serp.jpg"],
-["108–109","Janitrol Aluminized Steel chamber / partially cracked eyelet","Janitrol: GU0753REUC.S/910717253","","images/manual/108-109_janitrol-aluminized-steel-cham.jpg"],
-["110–111","Johnson Air-Ease rooftop (unsafe tag photo)","Johnson Air-Ease: G65-130D-1/13878-J8060; HAS130BD/13A67-JE267","","images/manual/110-111_johnson-air-ease-rooftop-unsaf.jpg"],
-["112–113","Lennox Duracurve/Duraglass lineage (G-7 through G-20)","Lennox G-10: G1002-82-1/5871K00453","","images/manual/112-113_lennox-duracurveduraglass-line.jpg"],
-["114–115","Lennox Counterflow (dirty filter neglect) / check entire chamber reminder","Lennox Counterflow: G12RD2-82/5879C01794; G16RQ3-75-9/5890M02910","","images/manual/114-115_lennox-counterflow-dirty-filte.jpg"],
-["116–117","Lennox G-23 / Bolted G-23 steps 1-2","Lennox G-23: G2303-100-1/5893K-55579; Bolted: G23Q3/4-100-1/5894829334","","images/manual/116-117_lennox-g-23-bolted-g-23-steps.jpg"],
-["118–119","Lennox Bolted G-23 step 3 (G-23 thru G-50 note)","Lennox Bolted G-23: G23Q3/4-100-1/5894829334","","images/manual/118-119_lennox-bolted-g-23-step-3-g-23.jpg"],
-["120–121","Lennox G-24 tubular / G-26 90% intro (propane risk note)","G-24: G24M2-60A-4/6396G78624; G-26: G26Q3-75-1","","images/manual/120-121_lennox-g-24-tubular-g-26-90-in.jpg"],
-["122–123","Lennox G-26 chambers (full detail) / G-26 serpentine top-row-fails-first","G-26: G26Q3-75-2 / G26Q3-75-1/58935J56139","","images/manual/122-123_lennox-g-26-chambers-full-deta.jpg"],
-["124–125","Lennox G-26 propane-converted (massively cracked, courtesy Gary Reecher) / Lennox Bolted G-40 - NEW entry","G-26: G26Q3/4-100-1/589E27513; Bolted G-40: G40UH-S6A-070-10/5905D29178","","images/manual/124-125_lennox-g-26-propane-converted.jpg"],
-["126–127","Lennox G-61 / Lennox Pulse recall (April 1997, courtesy Gary Reecher)","G-61: G61MPV-368-070-01/5905B10267; Pulse: G2103-100-3","","images/manual/126-127_lennox-g-61-lennox-pulse-recal.jpg"],
-["128–129","Lennox Pulse cont\'d / Lennox High-Efficiency S and E (tilt requirement)","Pulse: G2103-100-3; SLP98: SLP98UH090XV48C/5929H05654","","images/manual/128-129_lennox-pulse-contd-lennox-high.jpg"],
-["130–131","Lennox SLP98 tilting failure / rodent-death CO 1000+ppm story","SLP98: SLP98UH090XV48C-09/5919H05654","","images/manual/130-131_lennox-slp98-tilting-failure-r.jpg"],
-["132–133","Lennox EL dead-nut-level installation / Lennox Whisper Heat draft diverter hole","EL: EL195UH090XE48C-03,EL296UH090XV60C-02/5913C06712,5912C14806; Whisper Heat: G203/4E-125-2/5891H16692","","images/manual/132-133_lennox-el-dead-nut-level-insta.jpg"],
-["134–135","Lennox Whisper Heat draft diverter (cont\'d) / Mueller Climatrol documentation-standard advice","Whisper Heat: G20Q3E-75-I/5891A09403","","images/manual/134-135_lennox-whisper-heat-draft-dive.jpg"],
-["136–137","Nordyne Standard Efficiency (drum, inline combustion fan) / High-Efficiency tubular - NEW CONTENT, not previously captured","Nordyne Std: DGAA090BDTA/021214470; Nordyne HiEff: M7RL060ABW/M7A150103506","","images/manual/136-137_nordyne-standard-efficiency-dr.jpg"],
-["138–139","Rheem Criterion / Rheem 90% Drum (cpsc.gov recall reference)","Rheem Criterion: RG0G10-EAMER/CW5D302R-33931711; Rheem 90% Drum: UGED100RAJ5/Q5P707M4293(1993)","","images/manual/138-139_rheem-criterion-rheem-90-drum.jpg"],
-["140–141","Rheem narrow vs wide chamber distinction","Narrow chambered Rheem: RGDA-0452-BR/CK3D106F-40841736","","images/manual/140-141_rheem-narrow-vs-wide-chamber-d.jpg"],
-["142–143","Rheem Drum recalled (6th recall)","Rheem Drum: RGED-06EMAES/BU50603-R-M19921254; RGED10ERAJ5/BU5D607M-34925857","","images/manual/142-143_rheem-drum-recalled-6th-recall.jpg"],
-["144–145","Wide-chambered Rheem (feel-by-hand) / Rheem Reclaimer (official unsafe tag)","Wide-chambered Rheem: 3204125/F25748051","","images/manual/144-145_wide-chambered-rheem-feel-by-h.jpg"],
-["146–147","Rheem Counterflow (half-inch-further quote) / Ruud-Rheem 80% (courtesy Frank Davis)","Rheem Counterflow: 3010-175JD/CN3D107F30755745; Ruud/Rheem 80%: RGEB-10EE-GS/F28894621","","images/manual/146-147_rheem-counterflow-half-inch-fu.jpg"],
-["150–151","Ruud Silhouette (loose tube feel-check) / Silhouette II","Ruud Silhouette: UGDG-100BRJR/CB5D307-F25926217; Silhouette II: UGPH07-EAVER/DF50302F06-9703251","","images/manual/150-151_ruud-silhouette-loose-tube-fee.jpg"],
-["152–153","Ruud 90pct 1989 (drop-light limitations) / Ruud 1991 (bar-cracking repair kit)","Ruud 90% 1989: UGEB10EE GS/NN5D307F43892816; Ruud 1991: FG491-4927/UGDA075CERN3D184","","images/manual/152-153_ruud-90pct-1989-drop-light-lim.jpg"],
-["154–155","Sears (Heil-built) / Singer porthole-diverter check","Sears: 867164240/43681215; Singer: GB1104-10H8","","images/manual/154-155_sears-heil-built-singer-portho.jpg"],
-["156–157","Tappan (28yrs) / Tempstar 1986 80%","Tappan: GUF120DE3/72-1-09111; Tempstar: NULE080DG02/L883223603","","images/manual/156-157_tappan-28yrs-tempstar-1986-80.jpg"],
-["158–159","Tempstar serpentine (1994) / Trane-American Standard no-acceptable-cracks quote","Tempstar: NUG5100BHB1/L933622494; Trane: TUD1D120A9601AA,TUD18100A9361AA/54650AN1G","","images/manual/158-159_tempstar-serpentine-1994-trane.jpg"],
-["160–161","Trane primary eyelet 360-degree separation / secondary collector-box brittleness","—","","images/manual/160-161_trane-primary-eyelet-360-degre.jpg"],
-["162–163","Trane 80% serpentine / Trane 90% clamshell (3rd replacement note)","Trane 80%: TUD080C936B0/J29500095","","images/manual/162-163_trane-80-serpentine-trane-90-c.jpg"],
-["164–165","Trane 90% cracks main cells before eyelets / acidic rust secondary","Trane 90%: TUX080C-942C2/R315HJC70; TUC080C94286/N365K0Y7G","","images/manual/164-165_trane-90-cracks-main-cells-bef.jpg"],
-["166–167","Trane 90% BLU/D-K 1.5in clearance root cause (courtesy Gary Reecher)","Trane 90%: TUX080C94283/L255NU876","","images/manual/166-167_trane-90-blud-k-15in-clearance.jpg"],
-["168–169","Trane 90% flame-rollout enormous cracks / Wards older model oil-test smoke warning","Trane: TUX080C942B3/L255NU876; Wards: 5RM54653B/SN30102FL9797770","","images/manual/168-169_trane-90-flame-rollout-enormou.jpg"],
-["170–171","Wards 700 / Whirlpool no-safe-crack-or-hole quote","Wards 700: SAM54465A/F44276859; Whirlpool: FKB47130CR1/HB1950646","","images/manual/170-171_wards-700-whirlpool-no-safe-cr.jpg"],
-["172–173","York brackets-before-oil-test / tubular collector box check","York: UG080D07N18/HM178220; York 80% 1994: P8KM-LD12N060A/EDCM207581","","images/manual/172-173_york-brackets-before-oil-test.jpg"],
-["174–175","York newer chambers crack at firewall / York tubular tube-crimp cracks (courtesy Faszoid Heating)","York Stellar 1992: P3UCD08N0-6101A/EDAM155434","","images/manual/174-175_york-newer-chambers-crack-at-f.jpg"],
-["30–31","Amana subdivision-pattern business insight (CONFIRMED - closes earlier gap)","Amana: GH105DN3,GH105DN-3/AD92950077","","images/manual/030-031_amana-subdivision-pattern-busi.jpg"],
-["94–95","Heil 1996 serpentine / Heil 80% (7/28/00 bulletin) - CONFIRMED, closes earlier gap","—","","images/manual/094-095_heil-1996-serpentine-heil-80-7.jpg"]
+["back matter","Program marketing page + QR code","","","","Program marketing page. Confirms Heat Exchanger Experts was founded in 1993 by Ellis Prach, now run nationwide by his sons Russell and Christopher Prach. Includes a QR code inviting technicians to submit their own field findings for possible inclusion in future editions of the manual.","images/manual/zzz-backmatter_program-marketing-page-qr-code.jpg"],
+["copyright page / ToC","Copyright page + Table of Contents","","","","Copyright page and full Table of Contents. Copyright © 2000–2026 Heat Exchanger Experts, ISBN 0-9704535-0-7. Lists every brand section and its starting page, plus a separate page list for the Horizontal-furnace section.","images/manual/aaa-toc_copyright-page-table-of-conten.jpg"],
+["i–ii","Preface / Introduction","","","","Preface and Introduction. States the manual is built from \"over 50 years of experience,\" authored by Ellis Prach with an introduction by Kurt Holdorf. Names clamshell, serpentine, tubular, \"and other older chamber types\" as the designs covered — the manual's own acknowledgment that chamber types exist beyond the three main families.","images/manual/00-i-00-ii_preface-introduction.jpg"],
+["iii–1","How Can a Heat Exchanger Fail? / Rules and Regs","","","","The manual's root-cause list (oversizing, restricted return air, dirty filters, household chemical off-gassing, new-construction out-gassing, humidifier/coil water leaks, neglected air cleaners, manufacturing defects) plus the opening of \"Rules and Regs,\" which frames codes and manufacturer bulletins as the starting point for any inspection.","images/manual/00-iii-001_how-can-a-heat-exchanger-fail.jpg"],
+["2–3","Denver code excerpt / National Organizations AGA AHRI","","","","The 1995 Denver \"Unsafe Utility\" code excerpt, naming cracked heat exchangers directly as disqualifying. Facing page covers AGA's Three-Step Method history and quotes AHRI Guideline X-2009's visual-inspection standard almost verbatim: any crack or hole big enough to affect combustion will be visible to the naked eye; don't use water.","images/manual/002-003_denver-code-excerpt-national-o.jpg"],
+["4–5","Inspection Methods intro / chamber types + clamshell-brand list","","","","Introduces the three main chamber families (clamshell, serpentine, tubular) with photos of each, and lists roughly 30 brand names manufactured with clamshell chambers from 1960–1990. Confirms Ellis Prach's sons Russell and Christopher now run the training seminars.","images/manual/004-005_inspection-methods-intro-chamb.jpg"],
+["6–7","Clamshell steps 1-7 (full detail)","","","","Clamshell inspection steps 1–3: run a full cycle, kill gas/power, then a visual check of the burner shield and area, especially on units 15+ years old.","images/manual/006-007_clamshell-steps-1-7-full-detai.jpg"],
+["8–9","Clamshell steps 8-10 / Serpentine + Tubular intro","","","","Clamshell steps 4–7 (light-and-mirror check, inspection-hole/blower removal decision, careful chamber examination, blower-cavity view) — with a sharp stat: even with light and mirror, you can still miss 80% of the chamber's surface due to its shape.","images/manual/008-009_clamshell-steps-8-10-serpentin.jpg"],
+["10–11","CO Testing Procedure (IFGC 400/200ppm) / Combustion Analysis","","","","CO testing step-by-step procedure, with the IFGC's 400 ppm (80% furnaces) / 200 ppm (90%+ furnaces) thresholds stated directly. Recommends the Seitron PM1C CO detector and Seitron NOVO combustion analyzer. Repeats the core rule: a visual inspection is always still necessary regardless of test results.","images/manual/010-011_co-testing-procedure-ifgc-4002.jpg"],
+["12–13","Gas Pressure procedure / Furnace Sizing checklist","","","","8-step gas pressure measurement procedure (shutoff → manometer → adjust to spec → reassemble), plus a 7-question furnace-sizing checklist for replacement calls — install date, home additions, insulation upgrades, old-vs-new efficiency comparison, duct capacity, duct-cleaning history.","images/manual/012-013_gas-pressure-procedure-furnace.jpg"],
+["14–15","Clean and Safety Check (CPSC 400ppm) / Case Studies intro","","","","\"Clean and Safety Check\" (P&M) service-call checklist and business framing — positions a thorough inspection as a trust-building offer, not an upsell. States the CPSC's 400 ppm flue limit (a second, separate attribution of that number from the IFGC one on pages 10–11).","images/manual/014-015_clean-and-safety-check-cpsc-40.jpg"],
+["16–17","Reading clues (80% efficient) / Horizontal Armstrong steps 1-4","Armstrong","EG86125DC14-2A","8493A21068","Opens the \"read the exterior for clues\" section (white deposits behind a draft diverter = moisture damage), then begins the Horizontal-furnace section with a 4-step Armstrong Horizontal 80% example — horizontals are inspected differently than upright units because of how components are laid out.","images/manual/016-017_reading-clues-80-efficient-hor.jpg"],
+["18–19","Horizontal steps 5-12 / Horizontal Armstrong 1992","Armstrong","EG8G100DC14-1 (1992)","A10130HNA","Completes the 12-step horizontal inspection method (surfactant sprayed inside the chamber through the burner area, not outside as with standard clamshells) with a second Armstrong Horizontal example showing a crack exposed after removing a hiding plate.","images/manual/018-019_horizontal-steps-5-12-horizont.jpg"],
+["20–21","Horizontal Consolidated (30-brand recall) / Horizontal Ducane 80%","Consolidated (30+ brand names)","various — see note","","Major recall: horizontal furnaces built 1983–1995 by the now-defunct Consolidated Industries, sold under 30+ brand names (Amana, American Standard, Bard, Coleman, Goodman, Trane, and more) — a direct house-fire risk. If found, shut off gas immediately; no inspection needed. Facing page covers Ducane's horizontal design.","images/manual/020-021_horizontal-consolidated-30-bra.jpg"],
+["22–23","Horizontal Ducane (cont'd) / Horizontal Fraser Johnston","Ducane / Fraser Johnston","","","A Ducane horizontal chamber that cracked massively in under 7 years — the same design is sold under the Lennox name too. Fraser Johnston's horizontal burner area has rounded compartments that crack at the seams; don't let the different shape throw off the inspection.","images/manual/022-023_horizontal-ducane-contd-horizo.jpg"],
+["24–25","Horizontal Lennox / Horizontal Premier (2 models) - NEW CONTENT not previously indexed","Lennox / Premier","GS18Q3-75-5","","Horizontal Lennox and Premier entries — new content found only in this photo pass, not in earlier research. Premier has two horizontal models (side burner removal vs. end burner removal); both checked with light and mirror given horizontals are usually in a crawl space, which helps since it can be darkened to spot light through cracks.","images/manual/024-025_horizontal-lennox-horizontal-p.jpg"],
+["26–27","Horizontal Rheem / AirPro 80%","Rheem (horizontal) / AirPro","BGU1502A","941153753","Horizontal Rheem: check the gas pipe weld seam first — a different first-check location than upright models. Then begins the alphabetical brand section with AirPro 80%, a 33\" tall serpentine unit with smaller-than-usual eyelets.","images/manual/026-027_horizontal-rheem-airpro-80.jpg"],
+["28–29","AirPro 80% clogged coil / Amana weld-seam thump cue","AirPro / Amana","FG8D12520MU12A / GH105DN3","WKMM056709 / AD92950077","AirPro 80%: a furnace that failed from a clogged, dirty A/C coil restricting airflow — not a combustion issue at all. Amana: a new auditory cue — an expansion/contraction \"thump or snap\" noise, especially on older clamshell units, can indicate a crack before you ever see one.","images/manual/028-029_airpro-80-clogged-coil-amana-w.jpg"],
+["32–33","Amana 90%+ tube-loosening story (cont'd)","Amana","AMH950905CXAB","1105754461","The source of the deck's existing \"30 ppm CO, loose tubes\" story — both outside tubes had worked loose during install on this 95% tubular Amana. Adds two install-verification tips: always use a level on high-efficiency installs, and always derate + run a static pressure test after installing at altitude.","images/manual/032-033_amana-90-tube-loosening-story.jpg"],
+["34–35","Amana 95% corrosion / Amana-Goodman-Daikin material comparison","Amana / Goodman / Daikin","AMH9507038XAA","0610148599 / 1105754461","Amana 95%: acidic condensate corroded through the plate where primary meets secondary — covered under a lifetime warranty, proof a long warranty doesn't guarantee a long chamber life. Key material fact: Goodman's primary chamber uses aluminized steel; Amana and Daikin (same shared design family) use a lower-grade stainless that holds up worse under heat/condensate stress.","images/manual/034-035_amana-95-corrosion-amana-goodm.jpg"],
+["36–37","Goodman condensation (mis-leveled) / borescope technique","Goodman","GMS90703BXA","0503091452","A Goodman installed horizontally and mis-pitched backward (should pitch toward the drain) let condensate pool and corrode the secondary chamber. Shows a borescope (Teslong camera) technique: through the high-limit switch opening, down to where the primary meets the secondary — and notes this kind of corrosion failure isn't unique to one manufacturer.","images/manual/036-037_goodman-condensation-mis-level.jpg"],
+["38–39","American Standard weld-seam test / air baffle hot spots","American Standard","UGF-120E4 / GUB-125-E5 / AUD140C960J1","H66D00158 / Z0B5WY120","A genuinely useful test: to tell whether a weld seam is structurally part of the chamber, check what's behind it — if air passes through to the circulated airstream, it's part of the chamber. Also: air baffles installed to direct airflow can create hot spots that crack the metal right after the warranty expires.","images/manual/038-039_american-standard-weld-seam-te.jpg"],
+["40–41","Arcoaire 1989 80% detailed inspection process (steps)","Arcoaire","GUA100A-016AIN (1989)","R893700449","A detailed 12-screw teardown procedure for this 80% Arcoaire, with the oil/surfactant leak-test technique repeated. Emphasizes that a chamber looking \"clean and new\" doesn't mean safe — don't be fooled by appearances, go by actual findings.","images/manual/040-041_arcoaire-1989-80-detailed-insp.jpg"],
+["42–43","Arcoaire clamshell backside / Arcoaire serpentine","Arcoaire","G01100A0128IN","L94I435441","Shows the backside of an Arcoaire clamshell chamber with two separate cracks, then transitions into the serpentine variant — a horizontal crack where the burners fire into the chamber plus a vertical 4\" crack, both visible from the blower area with a small mirror.","images/manual/042-043_arcoaire-clamshell-backside-ar.jpg"],
+["44–45","Arcoaire 1980s light/mirror technique / Arkla discontinued","Arcoaire / Arkla","GUF75A008-N","000211300P28-0315","Arcoaire: the light-and-mirror technique explained in detail — mist the exterior (not interior) of a clamshell with surfactant, since seepage can only be seen from the outside. Arkla: a discontinued brand (matches the CPSC's own external-vent-corrosion recall) demonstrated with the chamber's back cut open to show exactly where it cracks.","images/manual/044-045_arcoaire-1980s-lightmirror-tec.jpg"],
+["46–47","Armstrong faceplate crack / EG6B recall detail","Armstrong","G64-80D / EG6F100DC16-3","147902","A faceplate crack above the burner area on a two-chambered Armstrong, plus an important recall-verification lesson: Armstrong recalled furnaces with model numbers beginning \"EG6B\" — always check the exact model prefix before assuming a similar-looking unit is or isn't covered.","images/manual/046-047_armstrong-faceplate-crack-eg6b.jpg"],
+["48–49","Armstrong eyelet / Armstrong Clamshell declined-repair story","Armstrong","GCJ100D12-4A / EG6G150DC20-3","8498D17667 / A2070 1FMA","A cautionary customer story: a homeowner declined repair on a 1\" crack; two years later the same furnace had developed cracks in three separate chambers. Stress cracks don't heal — they only get worse.","images/manual/048-049_armstrong-eyelet-armstrong-cla.jpg"],
+["50–51","Armstrong Ultra 80% eyelet missing (x2)","Armstrong","GUJ150D-120-28 / GCJ075D-14-3A (1997)","8496A12541 / 58497C21036","Two Armstrong Ultra 80% examples showing missing/partially-cracked eyelets — the closest eyelet to the burner, bottom row, is the first to check.","images/manual/050-051_armstrong-ultra-80-eyelet-miss.jpg"],
+["52–53","Armstrong Ultra 80% light-through-crack / Ultra II","Armstrong","EG6G150DCZ0-4A / EG6E80DC16-8 (1992)","8493E18129 / A147018NA","An alternative to the mirror method: shine a light through the burner opening and look for it passing through a crack. Ultra II has a secondary chamber sitting vertically beside the main one — still check the backside like any clamshell.","images/manual/052-053_armstrong-ultra-80-light-throu.jpg"],
+["54–55","Armstrong Ultra 90 (90% cracks at top, opposite of 80%)","Armstrong","GUK125D20-1A","8493112858","Confirms the generation-specific pattern: 80% serpentine chambers crack at the bottom eyelets first; 90% units are the opposite — they crack at the top first, so inspect from there.","images/manual/054-055_armstrong-ultra-90-90-cracks-a.jpg"],
+["56–57","Bard crack vs rust-line / Bryant dimpled-weld 7-step check","Bard / Bryant","IH85D48C / 125-393U","0080585D84 / 45S113179","Bard: what looks like a crack can actually be an aluminized-steel rust line — a penetration test tells the difference; still advise the customer to have it monitored either way. Bryant: dimple-welded chambers can crack up to 1\" at the dimples; a full 7-step visual sequence is shown.","images/manual/056-057_bard-crack-vs-rust-line-bryant.jpg"],
+["58–59","Carrier/Bryant Super Saver (welded not eyelet) / Bryant","Carrier/Bryant","58SS100-BC / 395CAV02-4055","5184C59096 / 3889A19652","This Carrier/Bryant Super Saver line is built with welds rather than the eyelets common elsewhere — cracked about 10\" from the top, best found from the top down with a narrow mirror and bright light.","images/manual/058-059_carrierbryant-super-saver-weld.jpg"],
+["60–61","Carrier/Bryant High-Efficient pre-2012 polypropylene liner bulletin","Carrier/Bryant","","","The well-known Carrier/Bryant pre-2012 bulletin in full: the secondary chamber's polypropylene liner can delaminate from the steel, causing dangerous CO buildup even when properly maintained. Full symptom list: high flue CO, hot top of furnace, tripped rollout switch, discolored/cracked/melted PVC sight glass, seized inducer motor, plugged drain trap.","images/manual/060-061_carrierbryant-high-efficient-p.jpg"],
+["62–63","Bulletin model list (Carrier/Bryant/Payne) / Carrier Plus 90 2013-current","Carrier / Bryant / Payne","","","The full list of model numbers covered by that same bulletin, across all three brand names. Then introduces the 2013-current Carrier/Bryant Plus 90 design, where most failures trace to poor airflow, improper install, or poor maintenance — and a hard rule: never put a filter on the supply side, only the return.","images/manual/062-063_bulletin-model-list-carrierbry.jpg"],
+["64–65","Carrier/Bryant 2013-present upflow/downflow reversal; combustion pass + visual still mandatory","Carrier","9125C36040S17A-A","2217A58343","Explicitly covers 2013–2026 Carrier/Bryant chambers. Key detail: the failure location flips between upflow and downflow units (top vs. bottom of the chamber). A sharp warning: a furnace can pass a combustion analysis test and still have a chamber rotted through — visual inspection is never optional.","images/manual/064-065_carrierbryant-2013-present-upf.jpg"],
+["66–67","Carrier 90% (1993) corrosion / Carrier 90 Plus","Carrier","398AAW0-48080D","1287A06472","A 1993 Carrier 90% with corrosion so bad on the secondary chamber openings that the author calls it \"deadly\" — any exterior corrosion, however small, should prompt a close look at the opposite side.","images/manual/066-067_carrier-90-1993-corrosion-carr.jpg"],
+["68–69","Take Pride motivation story / Carrier dimple weld cracks","Carrier","58GP125-1","8A35439","A genuinely motivating field story: a home inspector attending the seminar was so moved he immediately checked his own parents' 20+ year old Carrier furnace — and found active corrosion venting deadly fumes into the home. Section title: \"Take pride in your profession: your work saves lives.\"","images/manual/068-069_take-pride-motivation-story-ca.jpg"],
+["70–71","Carrier dimple-weld inspection method / felt-crack technique","Carrier","58PAV070-12","13F7A05946","The dimple-weld inspection method in detail: remove the top door and burner shield; if the face is rusted through, stop — it's already defective. Otherwise feel for cracks by hand through the limit-switch opening.","images/manual/070-071_carrier-dimple-weld-inspection.jpg"],
+["72–73","Carrier first 80% model (feel for crack) / Carrier Package Unit","Carrier","397HAW-048120 / 48TME007---501","4083C86029 / 0906G4045R","One of the very first 80%-efficient Carrier furnaces ever made — confirms the \"feel by hand through the limit switch opening\" technique on an early example. Also covers the Carrier rooftop Package Unit, a tubular design inspected by removing side or top panels.","images/manual/072-073_carrier-first-80-model-feel-fo.jpg"],
+["74–75","Carrier Package Unit (3 of 5 tubes cracked) / Coleman mobile home combustion air chute leak","Carrier / Coleman","48TME007---501","0906G4045R","A Carrier Package Unit with 3 of 5 tubes cracked, found by inserting a light into the tube. Coleman: a mobile-home staple where a leaking combustion-air chute causes the flame to search for air and impinge on the chamber sides.","images/manual/074-075_carrier-package-unit-3-of-5-tu.jpg"],
+["76–77","Coleman UPG bulletin (named, Feb 2005) / Comfortmaker 90%","Coleman / Comfortmaker","DGAT075BOF / GNK07SNI4AZ","981179518 / L9B2913664","A real, named service bulletin: Feb. 4, 2005, from The Unitary Products Group (UPG) of York International, on Coleman Model DGAT075BOF — heat exchanger cracking and furnace-wrapper burn-through, with a real upgrade program referenced (dgatprogram.com).","images/manual/076-077_coleman-upg-bulletin-named-feb.jpg"],
+["78–79","Cozy Wall Furnace (new furnace category) + Steel Sheeley training-ROI story","Cozy","W355G","17190964","A wall furnace — natural draft, no ductwork at all, a category entirely outside forced-air design. Cautionary story: a different tech had \"serviced\" this unit just a month earlier and missed an 8\"+ crack. Field-validated training impact: photos credited to a tech who found a similar failure \"3 days after attending our training class.\"","images/manual/078-079_cozy-wall-furnace-new-furnace.jpg"],
+["80–81","Dornback Gravity (drum split, installer error)","Dornback","SG90NS","9901-0035","A drum-style gravity furnace — a fourth chamber family beyond clamshell/serpentine/tubular. An installer who didn't balance the flame spreader correctly caused the flame to burn directly on the drum wall, splitting it open after only 5 years in service.","images/manual/080-081_dornback-gravity-drum-split-in.jpg"],
+["84–85","Fedders (99pct back-narrow stat) + 5-image crack-consistency comparison","Fedders","CUG045N1D / CUG105N0D / 120N3D","KP347566 / LM627848 / EG771277","A specific stated rate: 99% of the time, this clamshell design cracks in the back where the chamber narrows — check there first on any unfamiliar Fedders unit.","images/manual/084-085_fedders-99pct-back-narrow-stat.jpg"],
+["86–87","Fraser Johnston handyman patch story / Fraser Johnston 90%","Fraser Johnston","120CJ / PBNULD12N1008","277814 / EAYM002717","A real cautionary story about DIY repairs: a handyman's sloppy attempt to weld-patch a crack is discovered during inspection. The manual is blunt about it — a furnace crack cannot be patched or re-welded; that's not acceptable practice for a professional, and any prior patch job should raise suspicion of other shortcuts.","images/manual/086-087_fraser-johnston-handyman-patch.jpg"],
+["88–89","General Electric Murphys Law quote / Goodman 90% tubular","General Electric","BLU166C94880","511903","A memorable line: \"If you're thinking of Murphy's Law — that chambers crack where it's hardest to check — then you haven't read this manual.\" This GE's back panel comes off easily, making the usual back-of-chamber check simple.","images/manual/088-089_general-electric-murphys-law-q.jpg"],
+["90–91","Goodman 95% corrosion / 75000ppm CO reading, Excel Energy shut off","Goodman","GMV9509Q5DX8B / GMV9S0704CX8B","0709003928 / 0907707849","A dramatic real reading: combustion analysis on this Goodman 95% found CO over 75,000 ppm against a normal ceiling of 400 — the utility (Excel Energy) shut the furnace off on the spot. Also flags that multi-positional Goodmans installed horizontally have a notably higher failure rate.","images/manual/090-091_goodman-95-corrosion-75000ppm.jpg"],
+["92–93","Steel Gravity furnace (smoke-candle test) / Heil serpentine eyelet","","","","A 40+ year old steel gravity furnace, inspected live with an actual smoke-candle test — the historical method directly referenced in the public-sources research on leak-test history. Then introduces Heil's serpentine chamber and its known eyelet-rust problem.","images/manual/092-093_steel-gravity-furnace-smoke-ca.jpg"],
+["96–97","Heil 80% nox rods / Heil 90% (flipped upside down)","Heil","H8MPN125J2081 / N9MP2125J2081 (2004)","A062444873 / A0406490745","Nox rods (required in some CA counties to cut nitrous oxide emissions) reduce emissions but overheat the chamber where installed, causing premature cracking. Heil 90% cracks in the exact same place as 80% units, but the chamber is flipped upside down — access from the top via plenum/coil, not the blower.","images/manual/096-097_heil-80-nox-rods-heil-90-flipp.jpg"],
+["98–99","Heil 90% facial cracks / Holly (POTENTIAL quote)","Heil / Holly","NUGKI25DK06867769445 / 100-VF (1991 / 40+ yrs)","L910677895 / 630","One of the strongest lines in the manual: \"The POTENTIAL to put out CO condemns a furnace — not tested levels.\" A furnace with any crack or hole, of any size, must be considered unsafe regardless of what a CO test happens to read that day, because the amount of CO escaping varies day to day.","images/manual/098-099_heil-90-facial-cracks-holly-po.jpg"],
+["100–101","ICP/Comfortmaker dual-criteria IFGC quote; 5-ton single-sided return error","ICP / Comfortmaker","N8MSN0902120A1 (Nov. 2010)","A104714273","The cleanest version of the dual-safety-test rule anywhere in the manual: a safe furnace must be free of visual defects AND operate within IFGC CO thresholds — failing either one alone makes it unsafe. Real install-error example: a 5-ton unit installed with a single-sided return, corrected by properly sizing and routing return air.","images/manual/100-101_icpcomfortmaker-dual-criteria.jpg"],
+["102–103","ICP 90% (InterCity) brand family list / serpentine method, 300ppm catch story","ICP (InterCity)","NTGM050EFA3 / NUGS1258HB2","L992444373 / L941954484","Lists the full ICP/InterCity brand family (Arcoaire, Comfortmaker, Day & Night, Grand Aire, Heil, ICP Commercial, KeepRite, Lincoln, Tempstar — same chamber design across all). Training-ROI story: a seminar-trained tech caught a 300 ppm crack during a routine furnace removal that would otherwise have gone completely unnoticed.","images/manual/102-103_icp-90-intercity-brand-family.jpg"],
+["104–105","Intertherm drum-type (courtesy Bart Ferguson, Colorado Springs)","Intertherm","MIG8070A8W","MIG00080206","Another drum-type chamber brand, with tubes coming out of the top — inspected by placing a long thin mirror into the barrel chamber through the burner opening, since nothing is visible without one.","images/manual/104-105_intertherm-drum-type-courtesy.jpg"],
+["106–107","Janitrol heat-cycle abuse / serpentine eyelet rattling cue","Janitrol","GMP100-3V","9305093644","Frames heat-cycle stress as a 10-year cumulative abuse pattern — clogged filters make it worse by forcing more heating cycles. A second auditory cue confirmed: popped eyelet clamps can cause audible rattling during operation, not just the thermal \"thump or snap\" noted on Amana pages.","images/manual/106-107_janitrol-heat-cycle-abuse-serp.jpg"],
+["108–109","Janitrol Aluminized Steel chamber / partially cracked eyelet","Janitrol","GU0753REUC.S","910717253","An aluminized-steel Janitrol chamber with a crack found above the burner and confirmed from the backside with a long mirror. The serpentine variant shows a partially cracked eyelet — closest to the burner and blower, the first place to check.","images/manual/108-109_janitrol-aluminized-steel-cham.jpg"],
+["110–111","Johnson Air-Ease rooftop (unsafe tag photo)","Johnson Air-Ease","G65-130D-1 / HAS130BD","13878-J8060 / 13A67-JE267","A power-vented rooftop unit with cracks above the burners. Includes a real photo of an official utility \"unsafe — do not use\" tag, plus practical advice about teaming up with the local utility and getting a second opinion from a colleague on borderline findings.","images/manual/110-111_johnson-air-ease-rooftop-unsaf.jpg"],
+["112–113","Lennox Duracurve/Duraglass lineage (G-7 through G-20)","Lennox","G1002-82-1","5871K00453","The full Lennox Duracurve/Duraglass historical lineage: G-7 \"Tall Boy\" (1950s) through G-10 (1970s), G-12 counterflow, G-16 (1980s, 80%), and G-20 — all sharing the same distinctive \"S\"-shaped chamber used since the 1960s.","images/manual/112-113_lennox-duracurveduraglass-line.jpg"],
+["114–115","Lennox Counterflow (dirty filter neglect) / check entire chamber reminder","Lennox","G12RD2-82 / G16RQ3-75-9","5879C01794 / 5890M02910","A Lennox Counterflow found with an extremely dirty filter — direct evidence that airflow restriction damages the chamber. Reminder: just because you don't find the defect in the most common spot doesn't mean it's safe — check the entire chamber.","images/manual/114-115_lennox-counterflow-dirty-filte.jpg"],
+["116–117","Lennox G-23 / Bolted G-23 steps 1-2","Lennox","G2303-100-1 / G23Q3/4-100-1","5893K-55579 / 5894829334","Standard Lennox G-23 (too many cracks to individually count in this example) and the start of the Bolted G-23 procedure, steps 1–2: remove the blower, check the first curve of the chamber, then the bottom row of eyelets and both sides of the bolts.","images/manual/116-117_lennox-g-23-bolted-g-23-steps.jpg"],
+["118–119","Lennox Bolted G-23 step 3 (G-23 thru G-50 note)","Lennox","G23Q3/4-100-1","5894829334","Completes the Bolted G-23 sequence with step 3 (inspecting the second dimple curve). Confirms the same procedure covers every bolted Lennox chamber from G-23 through G-50.","images/manual/118-119_lennox-bolted-g-23-step-3-g-23.jpg"],
+["120–121","Lennox G-24 tubular / G-26 90% intro (propane risk note)","Lennox","G24M2-60A-4 / G26Q3-75-1","6396G78624","G-24 is tubular and fails first at the tube's first bend. G-26 is 90% serpentine; a real field observation worth remembering — this specific model \"seems to have a greater failure rate with propane than with natural gas.\"","images/manual/120-121_lennox-g-24-tubular-g-26-90-in.jpg"],
+["122–123","Lennox G-26 chambers (full detail) / G-26 serpentine top-row-fails-first","Lennox","G26Q3-75-1 / -2","58935J56139","Full set of G-26 chamber photos showing burn marks and a 3\" crack, with the key inspection rule: on 90% serpentine chambers the top row of eyelets fails first, the opposite of 80% units — inspect through the limit-switch opening, not the blower.","images/manual/122-123_lennox-g-26-chambers-full-deta.jpg"],
+["124–125","Lennox G-26 propane-converted (massively cracked, courtesy Gary Reecher) / Lennox Bolted G-40 - NEW entry","Lennox","G26Q3/4-100-1 / G40UH-S6A-070-10","589E27513 / 5905D29178","Directly confirms the propane-failure note from the previous page: this G-26, converted to propane (noted in handwriting on the unit itself), was massively cracked across the top of the chamber. Also introduces the Bolted G-40, confirming the same design runs unchanged across the entire G-23–G-50 range.","images/manual/124-125_lennox-g-26-propane-converted.jpg"],
+["126–127","Lennox G-61 / Lennox Pulse recall (April 1997, courtesy Gary Reecher)","Lennox","G61MPV-368-070-01 / G2103-100-3","5905B10267","A real recall: Lennox Pulse models G14 (1982–1992) and G21 (1992–late 1990s) — dated April 1997, for secondary chamber corrosion, requiring a dealer-performed pressure-decay test on pre-1990 units.","images/manual/126-127_lennox-g-61-lennox-pulse-recal.jpg"],
+["128–129","Lennox Pulse cont'd / Lennox High-Efficiency S and E (tilt requirement)","Lennox","G2103-100-3 / SLP98UH090XV48C","5919H05654","More Lennox Pulse detail (corrosion at the secondary-to-vent-tube connection). Then covers Lennox's high-efficiency \"S\" and \"E\" models (started 2010): must be tilted toward the front during install so condensate drains properly — skipping this causes exactly the failures shown on the following pages. Also: Heat Exchanger Experts specifically advises against installing these in the horizontal position at all.","images/manual/128-129_lennox-pulse-contd-lennox-high.jpg"],
+["130–131","Lennox SLP98 tilting failure / rodent-death CO 1000+ppm story","Lennox","SLP98UH090XV48C-09","5919H05654","A real-world example of the tilting failure just described — overheated gaskets at both the primary and secondary chamber due to improper installation. Also one of the manual's most memorable stories: a mouse died inside this heat exchanger, and combustion analysis found CO in the exhaust exceeding 1,000 ppm.","images/manual/130-131_lennox-slp98-tilting-failure-r.jpg"],
+["132–133","Lennox EL dead-nut-level installation / Lennox Whisper Heat draft diverter hole","Lennox","EL195UH090XE48C-03 / EL296UH090XV60C-02","5913C06712 / 5912C14806","States plainly: \"countless systems across North America\" have failed from being installed \"dead-nut level\" or pitched backward, instead of toward the drain — this installation error is common across brands, not unique to Lennox. Whisper Heat: check both sides of the draft diverter with a flashlight for a burned-through hole.","images/manual/132-133_lennox-el-dead-nut-level-insta.jpg"],
+["134–135","Lennox Whisper Heat draft diverter (cont'd) / Mueller Climatrol documentation-standard advice","Lennox","G20Q3E-75-I","5891A09403","Full Whisper Heat draft-diverter inspection, showing the burned hole from multiple angles. Documentation standard stated directly: always log serial number, model number, date/time, technician name, and your stated opinion, even if nothing was found — that record protects you later.","images/manual/134-135_lennox-whisper-heat-draft-dive.jpg"],
+["136–137","Nordyne Standard Efficiency (drum, inline combustion fan) / High-Efficiency tubular - NEW CONTENT, not previously captured","Nordyne","DGAA090BDTA / M7RL060ABW","021214470 / M7A150103506","Nordyne (sold also as Miller, Intertherm, Coleman, Frigidaire) was the first company to build a furnace for manufactured homes, in 1935. Drum-style design with an inline combustion fan instead of induced draft — the manual notes these commonly run elevated CO above IFGC thresholds, and that combustion readings from the exhaust are unreliable due to the drum's shape; take readings from the vent stack at the top of the house instead.","images/manual/136-137_nordyne-standard-efficiency-dr.jpg"],
+["138–139","Rheem Criterion / Rheem 90% Drum (cpsc.gov recall reference)","Rheem","RG0G10-EAMER / UGED100RAJ5 (1993)","CW5D302R-33931711 / Q5P707M4293","Rheem Criterion is a newer tubular design, difficult to test visually since the blower can't be removed to see inside. Directly tells readers to check cpsc.gov by brand and serial number for recall status — the manual's own endorsement of exactly that verification approach.","images/manual/138-139_rheem-criterion-rheem-90-drum.jpg"],
+["140–141","Rheem narrow vs wide chamber distinction","Rheem","RGDA-0452-BR (~15 yrs)","CK3D106F-40841736","A key distinction worth remembering: wide-chambered Rheem cracks on the firewall first; narrow-chambered Rheem cracks on the back where it narrows — same brand, two different first-check locations depending on the sub-type in front of you.","images/manual/140-141_rheem-narrow-vs-wide-chamber-d.jpg"],
+["142–143","Rheem Drum recalled (6th recall)","Rheem","RGED-06EMAES / RGED10ERAJ5","BU50603-R-M19921254 / BU5D607M-34925857","A recalled Rheem drum chamber — the manual states plainly that once recall status is confirmed, no chamber inspection is even necessary. Shown here anyway for reference on where these specific drums tend to crack.","images/manual/142-143_rheem-drum-recalled-6th-recall.jpg"],
+["144–145","Wide-chambered Rheem (feel-by-hand) / Rheem Reclaimer (official unsafe tag)","Rheem","3204125","F25748051","Wide-chambered Rheem can be checked by reaching in and feeling for cracks along the left wall, 6\" above the burners — a tactile check, not just visual. Rheem Reclaimer: a second real photo of an official utility \"unsafe\" tag, this one for deterioration between chambers so obvious it needed no further inspection.","images/manual/144-145_wide-chambered-rheem-feel-by-h.jpg"],
+["146–147","Rheem Counterflow (half-inch-further quote) / Ruud-Rheem 80% (courtesy Frank Davis)","Rheem","3010-175JD","CN3D107F30755745","One of the manual's sharpest lines: \"moving your head a half inch further in when inspecting the chamber can make the difference between life and death for a homeowner.\" Even on an easily-accessible counterflow chamber, a casual look can miss a huge hole entirely.","images/manual/146-147_rheem-counterflow-half-inch-fu.jpg"],
+["150–151","Ruud Silhouette (loose tube feel-check) / Silhouette II","Ruud","UGDG-100BRJR / UGPH07-EAVER","CB5D307-F25926217 / DF50302F06-9703251","Tactile check for tubular Ruud Silhouette chambers: grab the far-right tube and feel for looseness at the collector box — it doesn't take much force to reveal a defective chamber.","images/manual/150-151_ruud-silhouette-loose-tube-fee.jpg"],
+["152–153","Ruud 90pct 1989 (drop-light limitations) / Ruud 1991 (bar-cracking repair kit)","Ruud","UGEB10EE GS (1989) / FG491-4927 (1991)","NN5D307F43892816 / UGDA075CERN3D184","A good illustration of visual inspection's limits: a crack that looks small can be deceptively large due to light reflection off the surrounding metal. Also: Rheem (Ruud's parent company) once offered a bar-repair kit, but the manual's advice is firm — don't try to patch cracks yourself even with a manufacturer kit; keep inspecting for problems elsewhere in the chamber too.","images/manual/152-153_ruud-90pct-1989-drop-light-lim.jpg"],
+["154–155","Sears (Heil-built) / Singer porthole-diverter check","Sears / Singer","867164240 / n/a (Singer, 35+ yrs)","43681215 / GB1104-10H8","This Sears furnace was actually built by Heil — knowing manufacturer history helps you recognize the real chamber pattern underneath a store brand name. New inspection location: check portholes behind the draft diverter shield specifically, a spot often missed because the diverter plate looks fine from outside.","images/manual/154-155_sears-heil-built-singer-portho.jpg"],
+["156–157","Tappan (28yrs) / Tempstar 1986 80%","Tappan / Tempstar","GUF120DE3 / NULE080DG02 (1986)","72-1-09111 / L883223603","Tappan and American Standard share a near-identical chamber design — check the back where it narrows first on either. Tempstar shares its design with Heil/Whirlpool/Sears; a simple light-down-the-plenum check is usually enough to condemn a furnace with a large crack.","images/manual/156-157_tappan-28yrs-tempstar-1986-80.jpg"],
+["158–159","Tempstar serpentine (1994) / Trane-American Standard no-acceptable-cracks quote","Tempstar / Trane / American Standard","NUG5100BHB1 (1994) / TUD1D120A9601AA","L933622494 / 54650AN1G","One of the manual's strongest quotes: \"No cracks, holes, or excessive corrosion should ever be considered acceptable — if those conditions were acceptable, manufacturers would produce them that way from the factory.\" Also notes: stress cracks never improve over time, so address the root cause before it becomes a bigger problem.","images/manual/158-159_tempstar-serpentine-1994-trane.jpg"],
+["160–161","Trane primary eyelet 360-degree separation / secondary collector-box brittleness","Trane / American Standard","TUD1D120A9601AA / TUD1B100A9361AA","54650AN1G / 7322RR51G","On these larger-eyelet designs, a crack can progress into a full 360° separation, letting the ring detach entirely. A separate failure mode on the secondary side: the plastic collector box behind the faceplate goes brittle with age and cracks — inspect it with a dual-lens borescope rotated a full 360°.","images/manual/160-161_trane-primary-eyelet-360-degre.jpg"],
+["162–163","Trane 80% serpentine / Trane 90% clamshell (3rd replacement note)","Trane","TUD080C936B0","J29500095","Trane 80% serpentine, inspected from the side of the chamber near the burners, checking all eyelets. The 90% clamshell variant is checked the same way as any clamshell — third heat exchanger replaced on this particular furnace, a sign of a recurring underlying problem, not a one-off defect.","images/manual/162-163_trane-80-serpentine-trane-90-c.jpg"],
+["164–165","Trane 90% cracks main cells before eyelets / acidic rust secondary","Trane","TUX080C-942C2 / TUC080C94286","R315HJC70 / N365K0Y7G","Unlike other 90% designs, this Trane cracks in the main chamber cells before the eyelets — look toward the middle of the chamber on both sides first. If nothing is found there, the second place to check is acidic rust around the screws and faceplate near the primary drain, which indicates a failed secondary heat exchanger.","images/manual/164-165_trane-90-cracks-main-cells-bef.jpg"],
+["166–167","Trane 90% BLU/D-K 1.5in clearance root cause (courtesy Gary Reecher)","Trane","TUX080C94283","L255NU876","A specific, verified root cause: cracks on Trane's 90% BLU/D-K series secondary collector box trace directly to the required 1-1/2\" clearance above the furnace top not being observed when evaporator coils were installed. Photos on this page courtesy of Gary Reecher.","images/manual/166-167_trane-90-blud-k-15in-clearance.jpg"],
+["168–169","Trane 90% flame-rollout enormous cracks / Wards older model oil-test smoke warning","Trane / Wards","TUX080C942B3 / 5RM54653B","L255NU876 / SN30102FL9797770","A service call that started as a flame-rollout complaint uncovered several enormous cracks once the chamber was removed. Wards: a practical customer-communication tip — warn homeowners before an oil test that a little smoke may briefly come through the registers, so they aren't alarmed.","images/manual/168-169_trane-90-flame-rollout-enormou.jpg"],
+["170–171","Wards 700 / Whirlpool no-safe-crack-or-hole quote","Wards / Whirlpool","SAM54465A / FKB47130CR1","F44276859 / HB1950646","States the manual's core safety principle directly: \"there is no such thing as a safe crack or hole.\" Don't ever use a passed CO test to conclude a crack is safe — most homeowners, whatever they say out loud, are ultimately grateful an inspection caught a serious hazard.","images/manual/170-171_wards-700-whirlpool-no-safe-cr.jpg"],
+["172–173","York brackets-before-oil-test / tubular collector box check","York","UG080D07N18 / P8KM-LD12N060A (1994)","HM178220 / EDCM207581","A fast habit worth building: check brackets and the face plate for cracks before ever doing an oil test — it costs nothing and can save you the whole test. Tubular chambers are checked at the collector box, since tubes can warp loose there over time.","images/manual/172-173_york-brackets-before-oil-test.jpg"],
+["174–175","York newer chambers crack at firewall / York tubular tube-crimp cracks (courtesy Faszoid Heating)","York","P3UCD08N0-6101A (1992)","EDAM155434","Newer (post-1992) York-family 80%/90% chambers crack at the firewall — a different first-check location than older units, which crack where the chamber narrows at the back. Tubular York chambers crack at the tube crimps specifically; rust on the unit here points to a long-leaking A/C coil above it.","images/manual/174-175_york-newer-chambers-crack-at-f.jpg"],
+["30–31","Amana subdivision-pattern business insight (CONFIRMED - closes earlier gap)","Amana","GH105DN3 / GH105DN-3","AD92950077","A genuine business-development tip buried in a technical manual: track which furnace brand a subdivision's original builder used. Neighbors in the same development often share the same predictable crack pattern — worth building relationships around. Also recommends logging every inspection's results to build your own pattern library over time.","images/manual/030-031_amana-subdivision-pattern-busi.jpg"],
+["94–95","Heil 1996 serpentine / Heil 80% (7/28/00 bulletin) - CONFIRMED, closes earlier gap","Heil","H8MPN125J2081 (2006)","A062444873","A real, named, dated service bulletin: Heil, 7/28/00, specifically on the eyelet-cracking problem — confirmed directly in the manual, not just inferred.","images/manual/094-095_heil-1996-serpentine-heil-80-7.jpg"]
 ];
 const MANUAL_RECALLS = [
   ["York/Luxaire/Coleman","2001","~7,000 mid-efficiency 80% furnaces recalled for detached heat exchanger tubes."],
@@ -1010,6 +1121,7 @@ function render() {
   renderManualIndex(q);
 }
 
+// MANUAL_INDEX row shape: [pages, title, brand, model, serial, summary, image]
 function renderManualIndex(q) {
   const filteredSmart = MANUAL_INDEX.filter(row => {
     if (!q) return true;
@@ -1021,16 +1133,29 @@ function renderManualIndex(q) {
   const empty = document.getElementById('manualEmptyState');
   if (!filteredSmart.length) { container.innerHTML = ''; empty.style.display = 'block'; return; }
   empty.style.display = 'none';
-  container.innerHTML = filteredSmart.map(([pages, title, note, _unused, image]) => `
-    <div class="card manual-card">
-      ${image ? `<img class="manual-thumb" src="${image}" alt="${escapeHtml(title)}" loading="lazy" onclick="openManualImage('${image}','${escapeHtml(title).replace(/'/g,"\\'")}')">` : ''}
-      <div class="manual-card-body">
-        <p class="card-title">${escapeHtml(title)}</p>
-        <div class="card-meta"><span>pp. ${escapeHtml(pages)}</span></div>
-        ${note && note !== '\u2014' ? `<p class="pointer">${escapeHtml(note)}</p>` : ''}
-      </div>
-    </div>`).join('');
+  container.innerHTML = filteredSmart.map(row => manualCardHtml(row)).join('');
 }
+
+function manualCardHtml([pages, title, brand, model, serial, summary, image]) {
+  const metaBits = [];
+  if (brand) metaBits.push(`<span>${escapeHtml(brand)}</span>`);
+  if (model) metaBits.push(`<span>Model: ${escapeHtml(model)}</span>`);
+  if (serial) metaBits.push(`<span>Serial: ${escapeHtml(serial)}</span>`);
+  const safeTitle = escapeHtml(title).replace(/'/g, "\\'");
+  return `
+    <div class="card manual-card-v2">
+      <p class="card-title">${escapeHtml(title)}</p>
+      <div class="card-meta">${metaBits.join('')}<span>pp. ${escapeHtml(pages)}</span></div>
+      <p class="pointer">${escapeHtml(summary)}</p>
+      <div class="manual-card-foot">
+        <img class="manual-thumb-sm" src="${image}" alt="${escapeHtml(title)}" loading="lazy" onclick="openManualImage('${image}','${safeTitle}')">
+        <button class="view-page-btn" onclick="openManualImage('${image}','${safeTitle}')">View original page &#8599;</button>
+      </div>
+    </div>`;
+}
+
+/* ---- Zoomable image viewer: wheel/pinch zoom + drag pan ---- */
+let _zoomState = { scale: 1, x: 0, y: 0, pointers: new Map(), lastDist: 0 };
 
 function openManualImage(src, caption) {
   let overlay = document.getElementById('manualImgOverlay');
@@ -1038,11 +1163,90 @@ function openManualImage(src, caption) {
     overlay = document.createElement('div');
     overlay.id = 'manualImgOverlay';
     overlay.className = 'manual-img-overlay';
-    overlay.onclick = () => { overlay.style.display = 'none'; };
+    overlay.innerHTML = `
+      <div class="ziv-topbar">
+        <span class="ziv-caption"></span>
+        <button class="ziv-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="ziv-stage"><img class="ziv-img" draggable="false"></div>
+      <p class="ziv-hint">Scroll / pinch to zoom &middot; drag to pan &middot; tap &times; to close</p>
+    `;
     document.body.appendChild(overlay);
+    wireZoomViewer(overlay);
   }
-  overlay.innerHTML = `<img src="${src}" alt="${caption}"><p>${caption}</p>`;
+  overlay.querySelector('.ziv-caption').textContent = caption;
+  const img = overlay.querySelector('.ziv-img');
+  img.src = src;
+  _zoomState = { scale: 1, x: 0, y: 0, pointers: new Map(), lastDist: 0 };
+  img.style.transform = 'translate(0px,0px) scale(1)';
   overlay.style.display = 'flex';
+}
+
+function wireZoomViewer(overlay) {
+  const stage = overlay.querySelector('.ziv-stage');
+  const img = overlay.querySelector('.ziv-img');
+  overlay.querySelector('.ziv-close').addEventListener('click', () => { overlay.style.display = 'none'; });
+
+  function applyTransform() {
+    img.style.transform = `translate(${_zoomState.x}px,${_zoomState.y}px) scale(${_zoomState.scale})`;
+  }
+  function clampScale(s) { return Math.min(5, Math.max(1, s)); }
+
+  // Wheel zoom (desktop)
+  stage.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const delta = -e.deltaY * 0.0015;
+    _zoomState.scale = clampScale(_zoomState.scale + delta);
+    if (_zoomState.scale === 1) { _zoomState.x = 0; _zoomState.y = 0; }
+    applyTransform();
+  }, { passive: false });
+
+  // Double-click / double-tap to toggle zoom
+  stage.addEventListener('dblclick', () => {
+    _zoomState.scale = _zoomState.scale > 1 ? 1 : 2.2;
+    if (_zoomState.scale === 1) { _zoomState.x = 0; _zoomState.y = 0; }
+    applyTransform();
+  });
+
+  // Pointer-based drag-to-pan and pinch-to-zoom (touch + mouse unified)
+  let dragging = false, lastX = 0, lastY = 0;
+  stage.addEventListener('pointerdown', (e) => {
+    stage.setPointerCapture(e.pointerId);
+    _zoomState.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (_zoomState.pointers.size === 1) { dragging = true; lastX = e.clientX; lastY = e.clientY; }
+    if (_zoomState.pointers.size === 2) {
+      dragging = false;
+      const pts = [..._zoomState.pointers.values()];
+      _zoomState.lastDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+    }
+  });
+  stage.addEventListener('pointermove', (e) => {
+    if (!_zoomState.pointers.has(e.pointerId)) return;
+    _zoomState.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (_zoomState.pointers.size === 2) {
+      const pts = [..._zoomState.pointers.values()];
+      const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      if (_zoomState.lastDist > 0) {
+        const factor = dist / _zoomState.lastDist;
+        _zoomState.scale = clampScale(_zoomState.scale * factor);
+      }
+      _zoomState.lastDist = dist;
+      if (_zoomState.scale === 1) { _zoomState.x = 0; _zoomState.y = 0; }
+      applyTransform();
+    } else if (dragging && _zoomState.scale > 1) {
+      _zoomState.x += e.clientX - lastX;
+      _zoomState.y += e.clientY - lastY;
+      lastX = e.clientX; lastY = e.clientY;
+      applyTransform();
+    }
+  });
+  function endPointer(e) {
+    _zoomState.pointers.delete(e.pointerId);
+    if (_zoomState.pointers.size < 2) _zoomState.lastDist = 0;
+    if (_zoomState.pointers.size === 0) dragging = false;
+  }
+  stage.addEventListener('pointerup', endPointer);
+  stage.addEventListener('pointercancel', endPointer);
 }
 
 // Given a brand name (and optionally a model string), find the best-matching
@@ -1051,12 +1255,11 @@ function findManualImageForBrand(brand, model) {
   if (!brand) return null;
   const b = brand.toLowerCase();
   const m = (model || '').toLowerCase();
-  // Prefer a row whose title AND model text both reference the brand, and ideally the model.
   let best = null;
   for (const row of MANUAL_INDEX) {
-    const [, title, modelNote, , image] = row;
+    const [, title, rowBrand, rowModel, , summary, image] = row;
     if (!image) continue;
-    const hay = (title + ' ' + modelNote).toLowerCase();
+    const hay = (title + ' ' + rowBrand + ' ' + rowModel + ' ' + summary).toLowerCase();
     if (hay.includes(b)) {
       if (m && hay.includes(m)) return row; // strong match, stop here
       if (!best) best = row; // weaker brand-only match, keep looking for a better one
@@ -1085,6 +1288,7 @@ render();
   const serialField = document.getElementById('serialField');
   const lookupBtn = document.getElementById('lookupBtn');
   const statusEl = document.getElementById('plateStatus');
+  let lastPlatePhoto = null; // base64 downscaled JPEG from the most recent camera scan, if any
   const resultEl = document.getElementById('plateResult');
 
   // Populate brand dropdown from known decoders + legends.
@@ -1103,6 +1307,7 @@ render();
   manualBtn.addEventListener('click', () => {
     manualFields.style.display = 'grid';
     statusEl.textContent = '';
+    lastPlatePhoto = null; // typed in by hand — no photo to attach if this gets flagged
   });
 
   // Photo capture works on any modern mobile browser via the file input's
@@ -1118,6 +1323,8 @@ render();
     statusEl.innerHTML = '<p class="status-msg">Reading the plate&hellip;</p>';
     try {
       const b64 = await fileToBase64(file);
+      // Keep a small downscaled copy around in case this plate needs flagging below.
+      lastPlatePhoto = await downscaleImageToBase64(file, 480, 0.7);
       const result = await askClaude(
         'This is a photo of an HVAC furnace data plate / nameplate. Read the brand (manufacturer name), the model number, and the serial number exactly as printed. If a field is not clearly legible, use null for it rather than guessing. Reply with only JSON: {"brand": string|null, "model": string|null, "serial": string|null}',
         { images: [{ data: b64, media_type: file.type || 'image/jpeg' }], max_tokens: 300 }
@@ -1180,20 +1387,54 @@ render();
       </table></div>`;
     }
 
-    // Real manual photo, if we have one matching this brand/model
+    // Real manual photo, if we have one matching this brand/model — otherwise
+    // offer to flag it so Eddie can add it to the index later.
+    let brandLabelForMatch = '';
+    let manualMatch = null;
     if (brandKey) {
-      const brandLabelForMatch = (BRAND_OPTIONS.find(([v]) => v === brandKey)?.[1] || brandLabelFallback || '').split(' / ')[0];
-      const match = findManualImageForBrand(brandLabelForMatch, model);
-      if (match) {
-        const [mpages, mtitle, , , mimage] = match;
+      brandLabelForMatch = (BRAND_OPTIONS.find(([v]) => v === brandKey)?.[1] || brandLabelFallback || '').split(' / ')[0];
+      manualMatch = findManualImageForBrand(brandLabelForMatch, model);
+      if (manualMatch) {
+        const [mpages, mtitle, , , , , mimage] = manualMatch;
         html += `<div class="plate-match-photo">
           <img src="${mimage}" alt="${escapeHtml(mtitle)}" onclick="openManualImage('${mimage}','${escapeHtml(mtitle).replace(/'/g,"\\'")}')">
           <div class="pmp-text"><strong>Matching manual page (pp. ${escapeHtml(mpages)})</strong>${escapeHtml(mtitle)}</div>
         </div>`;
       }
     }
+    if ((brandKey || brandLabelFallback) && !manualMatch) {
+      html += `<div class="no-match-flag" id="noMatchFlag">
+        We don't have a matching reference entry for this one yet.
+        <button id="flagPlateBtn" type="button">Flag for Eddie to add</button>
+      </div>`;
+    }
 
     resultEl.innerHTML = html || '<p class="result-note">Enter at least a brand to see what we know.</p>';
+
+    const flagBtn = document.getElementById('flagPlateBtn');
+    if (flagBtn) {
+      flagBtn.addEventListener('click', async () => {
+        flagBtn.disabled = true;
+        flagBtn.textContent = 'Flagging\u2026';
+        try {
+          await postToFunction('flag-plate', {
+            brand: brandLabelForMatch || brandLabelFallback || '',
+            model, serial,
+            note: '',
+            photo: lastPlatePhoto,
+            photo_media_type: 'image/jpeg',
+          });
+          const wrap = document.getElementById('noMatchFlag');
+          wrap.classList.add('flagged');
+          wrap.innerHTML = 'Flagged \u2014 thanks. Eddie will review it and can add it to the index.';
+        } catch (e) {
+          flagBtn.disabled = false;
+          flagBtn.textContent = 'Flag for Eddie to add';
+          const msgs = { wrong_passcode: 'Wrong passcode — try again.', network: 'Couldn\u2019t reach the server.' };
+          alert(msgs[e.code] || 'Couldn\u2019t save the flag right now — try again in a moment.');
+        }
+      });
+    }
 
     // Auto-filter the main lookup below to this brand
     if (brandKey) {
@@ -1290,7 +1531,7 @@ render();
     // Only reference data already cleared for Sila use — never the manual's own text.
     const brandLines = ENTRIES.map(e => `- ${e.brand} ${e.model} (${e.type}, ${e.generation}): ${e.pointer} Symptoms: ${(e.symptoms||[]).join(', ')}`).join('\n');
     const stateLines = Object.entries(STATE_REGS).map(([k,r]) => `- ${r.name}: code ${r.code}; CO law: ${r.co}`).join('\n');
-    const manualLines = MANUAL_INDEX.map(([pages,title,note]) => `- pp.${pages} ${title}: ${note}`).join('\n');
+    const manualLines = MANUAL_INDEX.map(([pages,title,brand,model,serial,summary]) => `- pp.${pages} ${title} (${brand} ${model}): ${summary}`).join('\n');
     const recallLines = MANUAL_RECALLS.map(([b,y,n]) => `- ${b} (${y}): ${n}`).join('\n');
     return [
       'BRAND/CHAMBER REFERENCE ENTRIES:\n' + brandLines,
@@ -1332,6 +1573,100 @@ render();
   input.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') ask(); });
 
   renderManualIndex('');
+})();
+
+/* --- Admin: flagged plates --- */
+(function () {
+  const linkBtn = document.getElementById('adminLinkBtn');
+  const panel = document.getElementById('adminPanel');
+  const toggle = document.getElementById('adminToggle');
+  const statusEl = document.getElementById('adminStatus');
+  const listEl = document.getElementById('adminFlagsList');
+  const refreshBtn = document.getElementById('adminRefreshBtn');
+
+  function getAdminPasscode() { return localStorage.getItem('hex_tool_admin_passcode') || ''; }
+  async function ensureAdminPasscode() {
+    let pc = getAdminPasscode();
+    if (pc) return pc;
+    pc = window.prompt('Admin passcode:') || '';
+    if (pc) localStorage.setItem('hex_tool_admin_passcode', pc);
+    return pc;
+  }
+  async function callAdmin(action, extra) {
+    const passcode = await ensureAdminPasscode();
+    const resp = await fetch('/.netlify/functions/admin-flags', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, passcode, ...extra }),
+    });
+    if (resp.status === 401) {
+      localStorage.removeItem('hex_tool_admin_passcode');
+      const err = new Error('wrong_passcode'); err.code = 'wrong_passcode'; throw err;
+    }
+    if (!resp.ok) {
+      let msg = 'server_error';
+      try { const j = await resp.json(); msg = j.error || msg; } catch (e2) {}
+      const err = new Error(msg); err.code = 'server_error'; throw err;
+    }
+    return resp.json();
+  }
+
+  function timeAgo(iso) {
+    const d = new Date(iso);
+    return isNaN(d) ? '' : d.toLocaleString();
+  }
+
+  async function loadFlags() {
+    statusEl.innerHTML = '<p class="status-msg">Loading&hellip;</p>';
+    listEl.innerHTML = '';
+    try {
+      const { flags } = await callAdmin('list', {});
+      statusEl.textContent = '';
+      const open = (flags || []).filter(f => !f.resolved);
+      if (!open.length) {
+        listEl.innerHTML = '<p class="result-note">No open flags right now.</p>';
+        return;
+      }
+      listEl.innerHTML = open.map(f => {
+        const img = f.photo ? `data:${f.photo_media_type || 'image/jpeg'};base64,${f.photo}` : '';
+        return `<div class="card admin-flag-card" data-id="${f.id}">
+          ${img ? `<img src="${img}" alt="flagged plate" onclick="openManualImage('${img}','Flagged plate')">` : ''}
+          <div class="afc-body">
+            <strong>${escapeHtml(f.brand || '(brand not read)')}</strong>
+            ${f.model ? ` &mdash; ${escapeHtml(f.model)}` : ''}
+            ${f.serial ? `<div>Serial: ${escapeHtml(f.serial)}</div>` : ''}
+            <div class="afc-meta">Flagged ${escapeHtml(timeAgo(f.createdAt))}</div>
+            <button data-act="resolve" data-id="${f.id}">Mark resolved</button>
+            <button data-act="delete" data-id="${f.id}">Delete</button>
+          </div>
+        </div>`;
+      }).join('');
+      listEl.querySelectorAll('button[data-act]').forEach(b => {
+        b.addEventListener('click', async () => {
+          const id = b.dataset.id, act = b.dataset.act;
+          b.disabled = true;
+          try {
+            await callAdmin(act, { id });
+            b.closest('.admin-flag-card').remove();
+          } catch (e) {
+            b.disabled = false;
+            alert('Couldn\u2019t update that flag — try again.');
+          }
+        });
+      });
+    } catch (e) {
+      const msgs = { wrong_passcode: 'Wrong admin passcode — try again.', network: 'Couldn\u2019t reach the server.' };
+      statusEl.innerHTML = `<p class="status-msg err">${msgs[e.code] || 'Couldn\u2019t load flags right now.'}</p>`;
+    }
+  }
+
+  linkBtn.addEventListener('click', () => {
+    const willShow = panel.style.display === 'none';
+    panel.style.display = willShow ? 'block' : 'none';
+    if (willShow) { panel.classList.add('open'); loadFlags(); }
+  });
+  toggle.addEventListener('click', () => panel.classList.toggle('open'));
+  refreshBtn.addEventListener('click', loadFlags);
 })();
 </script>
 </body>

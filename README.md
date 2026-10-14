@@ -61,6 +61,40 @@ up from what's built here. Two easy things worth doing regardless:
   unexpectedly.
 - **Rotate `SITE_PASSCODE`** if you ever suspect it's leaked outside your team, and redeploy.
 
+## What's new in this update
+
+1. **Text-first manual index, image as supporting evidence.** Each entry now leads
+   with a clean written summary (brand, model, serial, and what the page actually
+   shows/says) instead of just a photo of a book page. A small thumbnail and a
+   "View original page" button are still there if you want to see the real photo —
+   tap either one to open it full-screen with pinch/scroll zoom and drag-to-pan.
+2. **Flagging for plates we don't recognize.** When the data-plate reader can't
+   find a matching entry for a scanned brand/model, it now offers a "Flag for Eddie
+   to add" button. Flagged scans (brand/model/serial, plus a small photo if one was
+   taken) are saved so you can review and add them to the index later.
+3. **An Admin panel** (link at the bottom of the page) lists everything flagged,
+   lets you view the photo full-size, and mark each one resolved or delete it once
+   you've acted on it.
+
+### One more env variable, and one more setup step
+
+Because of items 2 and 3 above, there are two small additions to the setup from before:
+
+- **A new environment variable**: `ADMIN_PASSCODE` — a *separate* passcode from
+  `SITE_PASSCODE`, since flagged scans may include photos of customer equipment that
+  only you (not every tech with the regular passcode) should be reviewing. Add it
+  the same way as the others: Netlify dashboard → Site configuration →
+  Environment variables.
+- **Netlify Blobs** (the storage for flagged scans) is built into every Netlify
+  site automatically — nothing to sign up for separately. But it does mean this
+  site now has a real dependency (`@netlify/blobs`, declared in `package.json`),
+  so **deploy via the GitHub-connected method, not plain drag-and-drop** — Netlify's
+  build step needs to run `npm install` to pull that dependency in, which only
+  happens on a proper build, not a static file upload.
+
+After adding `ADMIN_PASSCODE`, redeploy once (Deploys → Trigger deploy) so the function
+picks it up, same as with the other environment variables.
+
 ## Real manual photos — now included, with permission
 
 Russell at Heat Exchanger Experts gave the OK to use the manual's own photos in this
